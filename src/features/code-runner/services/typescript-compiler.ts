@@ -16,17 +16,28 @@ export interface CompileOptions {
 
 class TypeScriptCompiler {
   private initialized = false
+  private initializationPromise: Promise<void> | null = null
 
   async initialize(): Promise<void> {
     if (this.initialized) return
+    if (this.initializationPromise) return this.initializationPromise
 
+    this.initializationPromise = this.doInitialize()
+    return this.initializationPromise
+  }
+
+  private async doInitialize(): Promise<void> {
     try {
+      console.log('Initializing esbuild with local wasm package...')
       await esbuild.initialize({
-        wasmURL: 'https://unpkg.com/esbuild-wasm@0.25.10/esbuild.wasm'
+        wasmURL: '/esbuild.wasm'
       })
       this.initialized = true
+      console.log('esbuild initialized successfully with local package')
     } catch (error) {
-      throw new Error(`Failed to initialize esbuild: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      console.error('Failed to initialize esbuild:', errorMessage)
+      throw new Error(`Failed to initialize esbuild: ${errorMessage}`)
     }
   }
 

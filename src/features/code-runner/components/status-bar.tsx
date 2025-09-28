@@ -1,9 +1,8 @@
 import { useCodeRunnerStore } from '../stores/code-runner-store'
-import { Badge } from '@/components/ui/badge'
 import { Loader2, CheckCircle, XCircle, Clock } from 'lucide-react'
 
 export function StatusBar() {
-  const { compileState, executionState } = useCodeRunnerStore()
+  const { compileState, executionState, outputs, language } = useCodeRunnerStore()
 
   const formatTime = (time: number | null) => {
     if (time === null) return '--'
@@ -11,12 +10,20 @@ export function StatusBar() {
     return `${(time / 1000).toFixed(1)}s`
   }
 
+  // 获取内存使用情况
+  const getMemoryUsage = () => {
+    if ('memory' in performance) {
+      const memory = (performance as { memory: { usedJSHeapSize: number } }).memory
+      return Math.round(memory.usedJSHeapSize / 1024 / 1024)
+    }
+    return 0
+  }
+
   const getCompileStatus = () => {
     if (compileState.isCompiling) {
       return {
         icon: <Loader2 className="h-3 w-3 animate-spin" />,
         text: '编译中...',
-        variant: 'secondary' as const,
         time: null
       }
     }
@@ -25,7 +32,6 @@ export function StatusBar() {
       return {
         icon: <XCircle className="h-3 w-3" />,
         text: '编译失败',
-        variant: 'destructive' as const,
         time: compileState.compileTime
       }
     }
@@ -34,7 +40,6 @@ export function StatusBar() {
       return {
         icon: <CheckCircle className="h-3 w-3" />,
         text: '编译完成',
-        variant: 'default' as const,
         time: compileState.compileTime
       }
     }
@@ -42,7 +47,6 @@ export function StatusBar() {
     return {
       icon: <Clock className="h-3 w-3" />,
       text: '等待编译',
-      variant: 'outline' as const,
       time: null
     }
   }
@@ -52,7 +56,6 @@ export function StatusBar() {
       return {
         icon: <Loader2 className="h-3 w-3 animate-spin" />,
         text: '执行中...',
-        variant: 'secondary' as const,
         time: null
       }
     }
@@ -61,7 +64,6 @@ export function StatusBar() {
       return {
         icon: <CheckCircle className="h-3 w-3" />,
         text: '执行完成',
-        variant: 'default' as const,
         time: executionState.executionTime
       }
     }
@@ -69,44 +71,46 @@ export function StatusBar() {
     return {
       icon: <Clock className="h-3 w-3" />,
       text: '等待执行',
-      variant: 'outline' as const,
       time: null
     }
   }
 
   const compileStatus = getCompileStatus()
   const executionStatus = getExecutionStatus()
+  
+  // 判断当前语言是否需要编译
+  const needsCompilation = language === 'typescript'
 
   return (
-    <div className="flex items-center justify-between px-3 py-2 bg-muted/30 border-b text-xs">
+    <div className="flex items-center justify-between px-3 py-2 bg-muted/30 border-b text-xs text-muted-foreground">
       <div className="flex items-center space-x-4">
-        <div className="flex items-center space-x-2">
-          <Badge variant={compileStatus.variant} className="flex items-center space-x-1">
+        {needsCompilation && (
+          <span className="flex items-center space-x-1">
             {compileStatus.icon}
             <span>{compileStatus.text}</span>
             {compileStatus.time && (
-              <span className="text-xs opacity-75">
+              <span className="opacity-75">
                 ({formatTime(compileStatus.time)})
               </span>
             )}
-          </Badge>
-        </div>
+          </span>
+        )}
         
-        <div className="flex items-center space-x-2">
-          <Badge variant={executionStatus.variant} className="flex items-center space-x-1">
-            {executionStatus.icon}
-            <span>{executionStatus.text}</span>
-            {executionStatus.time && (
-              <span className="text-xs opacity-75">
-                ({formatTime(executionStatus.time)})
-              </span>
-            )}
-          </Badge>
-        </div>
+        <span className="flex items-center space-x-1">
+          {executionStatus.icon}
+          <span>{executionStatus.text}</span>
+          {executionStatus.time && (
+            <span className="opacity-75">
+              ({formatTime(executionStatus.time)})
+            </span>
+          )}
+        </span>
       </div>
       
-      <div className="flex items-center space-x-4 text-muted-foreground">
-        {compileState.firstCompileTime && (
+      <div className="flex items-center space-x-4">
+        <span>内存: {getMemoryUsage()}MB</span>
+        <span>输出: {outputs.length}条</span>
+        {needsCompilation && compileState.firstCompileTime && (
           <span>首次编译: {formatTime(compileState.firstCompileTime)}</span>
         )}
         {executionState.firstExecutionTime && (

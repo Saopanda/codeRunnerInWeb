@@ -5,7 +5,7 @@ import { simpleSandboxManager } from './services/simple-sandbox'
 import { CodeRunnerErrorBoundary } from './components/error-boundary'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Code, Play, Settings, Github, Moon, Sun, Loader2, CheckCircle, XCircle, Trash2, Square, Code2, FileText } from 'lucide-react'
+import { Code, Play, Settings, Github, Moon, Sun, Loader2, Trash2, Square, Code2, FileText } from 'lucide-react'
 import { typescriptExamples } from './examples/typescript-examples'
 import { phpExamples } from './examples/php-examples'
 
@@ -37,46 +37,7 @@ export function CodeRunner() {
   
   const { resolvedTheme, setTheme } = useTheme()
 
-  const formatTime = (time: number | null) => {
-    if (time === null) return '--'
-    if (time < 1000) return `${Math.round(time)}ms`
-    return `${(time / 1000).toFixed(1)}s`
-  }
 
-  const getCompileStatus = () => {
-    if (compileState.compileErrors.length > 0) {
-      return {
-        icon: <XCircle className="h-3 w-3" />,
-        text: '编译失败',
-        time: compileState.compileTime
-      }
-    }
-    
-    if (compileState.compileTime !== null) {
-      return {
-        icon: <CheckCircle className="h-3 w-3" />,
-        text: '编译完成',
-        time: compileState.compileTime
-      }
-    }
-    
-    return null
-  }
-
-  const getExecutionStatus = () => {
-    if (executionState.executionTime !== null) {
-      return {
-        icon: <CheckCircle className="h-3 w-3" />,
-        text: '执行完成',
-        time: executionState.executionTime
-      }
-    }
-    
-    return null
-  }
-
-  const compileStatus = getCompileStatus()
-  const executionStatus = getExecutionStatus()
 
   useEffect(() => {
     // 清理函数
@@ -329,47 +290,7 @@ test();`
         </div>
         
         <div className="flex items-center space-x-4">
-          {/* 编译状态 */}
-          {compileStatus && (
-            <div className="flex items-center space-x-2">
-              <span className="flex items-center space-x-1 text-xs">
-                {compileStatus.icon}
-                <span>{compileStatus.text}</span>
-                {compileStatus.time && (
-                  <span className="opacity-75">
-                    ({formatTime(compileStatus.time)})
-                  </span>
-                )}
-              </span>
-            </div>
-          )}
-          
-          {/* 执行状态 */}
-          {executionStatus && (
-            <div className="flex items-center space-x-2">
-              <span className="flex items-center space-x-1 text-xs">
-                {executionStatus.icon}
-                <span>{executionStatus.text}</span>
-                {executionStatus.time && (
-                  <span className="opacity-75">
-                    ({formatTime(executionStatus.time)})
-                  </span>
-                )}
-              </span>
-            </div>
-          )}
-          
-          {/* 首次编译和执行时间 */}
-          {(compileState.firstCompileTime || executionState.firstExecutionTime) && (
-            <div className="flex items-center space-x-4 text-xs">
-              {compileState.firstCompileTime && (
-                <span>首次编译 <span className="opacity-75">({formatTime(compileState.firstCompileTime)})</span></span>
-              )}
-              {executionState.firstExecutionTime && (
-                <span>首次执行 <span className="opacity-75">({formatTime(executionState.firstExecutionTime)})</span></span>
-              )}
-            </div>
-          )}
+          {/* 右侧保持留空状态 */}
         </div>
       </footer>
       </div>

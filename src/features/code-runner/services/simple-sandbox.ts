@@ -69,7 +69,7 @@ export class SimpleSandboxManager {
         this.addOutput({
           type: 'info',
           message: '正在编译 TypeScript...',
-          source: 'console'
+          source: 'system'
         })
 
         // 开始编译性能监控
@@ -112,7 +112,7 @@ export class SimpleSandboxManager {
           this.addOutput({
             type: 'warn',
             message: `编译警告: ${compileResult.warnings.join('\n')}`,
-            source: 'console'
+            source: 'system'
           })
         }
 
@@ -121,7 +121,7 @@ export class SimpleSandboxManager {
         this.addOutput({
           type: 'info',
           message: 'TypeScript 编译完成',
-          source: 'console'
+          source: 'system'
         })
       } catch (error) {
         this.addOutput({
@@ -217,6 +217,15 @@ export class SimpleSandboxManager {
     }, config.timeout || 10000)
 
     try {
+      // 添加JavaScript执行开始消息
+      if (language === 'javascript') {
+        this.addOutput({
+          type: 'info',
+          message: '正在执行 JavaScript 代码...',
+          source: 'system'
+        })
+      }
+
       // 使用安全管理器进行代码分析
       const securityCheck = securityManager.createSecureExecutionEnvironment(code)
       
@@ -269,6 +278,15 @@ export class SimpleSandboxManager {
       // 执行完成
       const executionTime = stopExecutionMonitoring() // 停止性能监控
       
+      // 添加JavaScript执行完成消息
+      if (language === 'javascript') {
+        this.addOutput({
+          type: 'info',
+          message: 'JavaScript 代码执行完成',
+          source: 'system'
+        })
+      }
+      
       // 更新执行状态
       const store = useCodeRunnerStore.getState()
       store.setExecutionState({
@@ -295,12 +313,9 @@ export class SimpleSandboxManager {
   private createSecureGlobal(baseGlobal: Record<string, unknown>): Record<string, unknown> {
     const secureGlobal = { ...baseGlobal }
 
-    // 包装所有可能不安全的API
-    const originalConsole = secureGlobal.console as Console
-    secureGlobal.console = {
-      ...originalConsole,
-      // 保持原有的console方法
-    }
+    // 保持原有的console方法，不进行额外包装
+    // console方法已经在safeGlobal中正确实现了
+    // 这里不需要重新包装console对象
 
     // 包装setTimeout和setInterval以进行安全检查
     const originalSetTimeout = secureGlobal.setTimeout as typeof setTimeout

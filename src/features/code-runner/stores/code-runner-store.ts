@@ -5,7 +5,7 @@ export interface CodeOutput {
   type: 'log' | 'error' | 'warn' | 'info'
   message: string
   timestamp: number
-  source: 'console' | 'error' | 'timeout' | 'security'
+  source: 'console' | 'error' | 'timeout' | 'security' | 'system'
 }
 
 export interface CodeExecutionState {
@@ -59,6 +59,14 @@ interface CodeRunnerState {
   addOutput: (output: Omit<CodeOutput, 'id' | 'timestamp'>) => void
   clearOutputs: () => void
   
+  // 输出过滤和搜索
+  filter: 'all' | 'log' | 'error' | 'warn' | 'info' | 'system'
+  setFilter: (filter: 'all' | 'log' | 'error' | 'warn' | 'info' | 'system') => void
+  searchTerm: string
+  setSearchTerm: (term: string) => void
+  selectedOutputs: string[]
+  toggleOutputSelection: (id: string) => void
+  clearSelection: () => void
   
   // 配置相关
   config: SandboxConfig
@@ -184,6 +192,18 @@ export const useCodeRunnerStore = create<CodeRunnerState>((set) => ({
   })),
   clearOutputs: () => set({ outputs: [] }),
   
+  // 输出过滤和搜索
+  filter: 'all',
+  setFilter: (filter) => set({ filter }),
+  searchTerm: '',
+  setSearchTerm: (searchTerm) => set({ searchTerm }),
+  selectedOutputs: [],
+  toggleOutputSelection: (id) => set((prev) => ({
+    selectedOutputs: prev.selectedOutputs.includes(id)
+      ? prev.selectedOutputs.filter(selectedId => selectedId !== id)
+      : [...prev.selectedOutputs, id]
+  })),
+  clearSelection: () => set({ selectedOutputs: [] }),
   
   // 配置相关
   config: defaultConfig,

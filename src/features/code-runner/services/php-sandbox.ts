@@ -32,7 +32,7 @@ export class PHPSandboxManager {
       this.addOutput({
         type: 'warn',
         message: 'PHP 代码正在执行中，请等待完成后再试',
-        source: 'console'
+        source: 'system'
       })
       return
     }
@@ -87,7 +87,7 @@ export class PHPSandboxManager {
         this.addOutput({
           type: 'info',
           message: '正在初始化 PHP 环境...',
-          source: 'console'
+          source: 'system'
         })
 
         this.currentPhpInstance = new this.PhpWebClass()
@@ -103,7 +103,7 @@ export class PHPSandboxManager {
             this.addOutput({
               type: 'info',
               message: 'PHP 环境初始化完成',
-              source: 'console'
+              source: 'system'
             })
             resolve()
           }
@@ -152,7 +152,7 @@ export class PHPSandboxManager {
         this.addOutput({
           type: 'info',
           message: '正在执行 PHP 代码...',
-          source: 'console'
+          source: 'system'
         })
 
         // 执行PHP代码
@@ -163,13 +163,13 @@ export class PHPSandboxManager {
           this.addOutput({
             type: 'info',
             message: 'PHP 代码执行完成（无输出）',
-            source: 'console'
+            source: 'system'
           })
         } else if (returnCode === 0) {
           this.addOutput({
             type: 'info',
             message: 'PHP 代码执行完成',
-            source: 'console'
+            source: 'system'
           })
         } else {
           this.addOutput({
@@ -255,7 +255,7 @@ export class PHPSandboxManager {
       this.addOutput({
         type: 'info',
         message: `执行完成 (ID: ${currentExecutionId})`,
-        source: 'console'
+        source: 'system'
       })
     }
   }
@@ -296,7 +296,7 @@ export class PHPSandboxManager {
     this.addOutput({
       type: 'info',
       message: '正在强制重置 PHP 环境...',
-      source: 'console'
+      source: 'system'
     })
 
     // 销毁当前实例
@@ -325,7 +325,7 @@ export class PHPSandboxManager {
     this.addOutput({
       type: 'info',
       message: 'PHP 环境重置完成',
-      source: 'console'
+      source: 'system'
     })
   }
 }
