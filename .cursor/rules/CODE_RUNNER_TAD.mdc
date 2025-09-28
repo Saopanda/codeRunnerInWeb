@@ -26,7 +26,7 @@ alwaysApply: true
 ┌─────────────────┐    ┌─────────────────┐              │
 │  Language       │    │  Execution      │              │
 │  Manager        │    │  Engines        │              │
-│  (JS/TS/PHP)    │    │  (Worker/WASM)  │              │
+│  (JS/TS/PHP/PY)│    │  (Worker/WASM)  │              │
 └─────────────────┘    └─────────────────┘              │
                                                          │
 ┌─────────────────┐    ┌─────────────────┐              │
@@ -38,15 +38,16 @@ alwaysApply: true
 ### 核心组件
 
 1. **CodeEditor**: Monaco Editor 集成组件（支持多语言语法高亮）
-2. **SimpleSandboxManager**: 简化的沙箱管理器（支持 JS/TS/PHP）
+2. **SimpleSandboxManager**: 简化的沙箱管理器（支持 JS/TS/PHP/Python）
 3. **PHPSandboxManager**: PHP 专用沙箱（基于 PHP-WASM）
-4. **TypeScriptCompiler**: TypeScript 编译器（基于 esbuild-wasm）
-5. **OutputDisplay**: 控制台输出显示组件（支持过滤、搜索、选择）
-6. **SecurityManager**: 统一安全管理器
-7. **CodeAnalysisLayer**: 代码安全分析层
-8. **RuntimeMonitoringLayer**: 运行时安全监控层
-9. **PerformanceMonitor**: 性能监控和优化
-10. **CodeRunnerStore**: 状态管理（使用 Zustand）
+4. **PythonSandboxManager**: Python 专用沙箱（基于 Pyodide WebAssembly）
+5. **TypeScriptCompiler**: TypeScript 编译器（基于 esbuild-wasm）
+6. **OutputDisplay**: 控制台输出显示组件（支持过滤、搜索、选择）
+7. **SecurityManager**: 统一安全管理器
+8. **CodeAnalysisLayer**: 代码安全分析层
+9. **RuntimeMonitoringLayer**: 运行时安全监控层
+10. **PerformanceMonitor**: 性能监控和优化
+11. **CodeRunnerStore**: 状态管理（使用 Zustand）
 
 ## 数据模型/Schema
 
@@ -58,7 +59,7 @@ interface CodeExecutionState {
   executionId: string | null;
   startTime: number | null;
   timeoutId: number | null;
-  language: 'javascript' | 'typescript' | 'php';
+  language: 'javascript' | 'typescript' | 'php' | 'python';
 }
 
 interface CodeOutput {
@@ -66,8 +67,8 @@ interface CodeOutput {
   type: 'log' | 'error' | 'warn' | 'info' | 'output';
   message: string;
   timestamp: number;
-  source: 'console' | 'error' | 'timeout' | 'php_output' | 'php_error';
-  language: 'javascript' | 'typescript' | 'php';
+  source: 'console' | 'error' | 'timeout' | 'php_output' | 'php_error' | 'python_output' | 'python_error';
+  language: 'javascript' | 'typescript' | 'php' | 'python';
 }
 ```
 
@@ -78,8 +79,8 @@ interface CodeTemplate {
   name: string;
   description: string;
   code: string;
-  language: 'javascript' | 'typescript' | 'php';
-  category: 'basic' | 'async' | 'dom' | 'api' | 'oop' | 'functions';
+  language: 'javascript' | 'typescript' | 'php' | 'python';
+  category: 'basic' | 'async' | 'dom' | 'api' | 'oop' | 'functions' | 'data_science' | 'math' | 'visualization';
   tags: string[];
 }
 ```
@@ -91,7 +92,7 @@ interface SandboxConfig {
   maxMemory: number; // 最大内存使用（MB）
   allowedAPIs: string[]; // 允许的API列表
   blockedAPIs: string[]; // 禁止的API列表
-  language: 'javascript' | 'typescript' | 'php'; // 目标语言
+  language: 'javascript' | 'typescript' | 'php' | 'python'; // 目标语言
 }
 
 interface PHPSandboxConfig extends SandboxConfig {
@@ -100,6 +101,15 @@ interface PHPSandboxConfig extends SandboxConfig {
   memoryLimit: number;
   maxExecutionTime: number;
   maxInputVars: number;
+  errorReporting: string;
+}
+
+interface PythonSandboxConfig extends SandboxConfig {
+  pythonVersion: string;
+  enabledPackages: string[];
+  memoryLimit: number;
+  maxExecutionTime: number;
+  maxRecursionDepth: number;
   errorReporting: string;
 }
 ```
@@ -206,6 +216,7 @@ interface SecurityError extends Error {
   "@monaco-editor/react": "^4.7.0",
   "zustand": "^5.0.7",
   "php-wasm": "^0.0.8",
+  "pyodide": "^0.28.2",
   "esbuild-wasm": "^0.25.10",
   "react": "^19.1.1",
   "react-dom": "^19.1.1",
@@ -226,7 +237,7 @@ interface SecurityError extends Error {
 1. **路由集成**: 主页面路由 `/` 直接显示代码运行器
 2. **主题集成**: 支持明暗主题切换
 3. **布局集成**: 使用现有的布局组件
-4. **多语言集成**: 支持 JavaScript、TypeScript、PHP 三种语言
+4. **多语言集成**: 支持 JavaScript、TypeScript、PHP、Python 四种语言
 
 ## 测试策略
 
