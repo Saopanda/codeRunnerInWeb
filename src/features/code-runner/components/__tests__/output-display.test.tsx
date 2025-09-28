@@ -6,7 +6,12 @@ import type { CodeOutput } from '../../stores/code-runner-store'
 // Mock useCodeRunnerStore
 const mockStore = {
   outputs: [] as CodeOutput[],
-  clearOutputs: vi.fn()
+  clearOutputs: vi.fn(),
+  filter: 'all' as const,
+  searchTerm: '',
+  selectedOutputs: [] as string[],
+  toggleOutputSelection: vi.fn(),
+  clearSelection: vi.fn()
 }
 
 vi.mock('../../stores/code-runner-store', () => ({
@@ -17,6 +22,9 @@ describe('OutputDisplay', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockStore.outputs = []
+    mockStore.filter = 'all'
+    mockStore.searchTerm = ''
+    mockStore.selectedOutputs = []
   })
 
   describe('rendering', () => {

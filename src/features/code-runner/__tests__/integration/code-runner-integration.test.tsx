@@ -105,8 +105,9 @@ describe('CodeRunner Integration Tests', () => {
       render(<CodeRunner />)
 
       // Set JavaScript code
-      const codeEditor = screen.getByTestId('editor-textarea')
-      fireEvent.change(codeEditor, { target: { value: 'console.log("Hello World")' } })
+      // Set code directly via store
+      const { setCode } = useCodeRunnerStore.getState()
+      setCode('console.log("Hello World")')
 
       // Click run button
       const runButton = screen.getByRole('button', { name: /运行/i })
@@ -128,8 +129,9 @@ describe('CodeRunner Integration Tests', () => {
 
       render(<CodeRunner />)
 
-      const codeEditor = screen.getByTestId('editor-textarea')
-      fireEvent.change(codeEditor, { target: { value: 'throw new Error("Test error")' } })
+      // Set code directly via store
+      const { setCode } = useCodeRunnerStore.getState()
+      setCode('throw new Error("Test error")')
 
       const runButton = screen.getByRole('button', { name: /运行/i })
       fireEvent.click(runButton)
@@ -156,11 +158,11 @@ describe('CodeRunner Integration Tests', () => {
       render(<CodeRunner />)
 
       // Switch to TypeScript
-      const languageSelect = screen.getByRole('combobox', { name: /语言/i })
+      const languageSelect = screen.getAllByRole('combobox')[0]
       fireEvent.change(languageSelect, { target: { value: 'typescript' } })
 
       // Set TypeScript code
-      const codeEditor = screen.getByTestId('editor-textarea')
+      const codeEditor = screen.getByTestId('code-editor-container')
       fireEvent.change(codeEditor, { target: { value: 'const message: string = "Hello World"; console.log(message);' } })
 
       // Click run button
@@ -186,11 +188,11 @@ describe('CodeRunner Integration Tests', () => {
       render(<CodeRunner />)
 
       // Switch to TypeScript
-      const languageSelect = screen.getByRole('combobox', { name: /语言/i })
+      const languageSelect = screen.getAllByRole('combobox')[0]
       fireEvent.change(languageSelect, { target: { value: 'typescript' } })
 
       // Set invalid TypeScript code
-      const codeEditor = screen.getByTestId('editor-textarea')
+      const codeEditor = screen.getByTestId('code-editor-container')
       fireEvent.change(codeEditor, { target: { value: 'const message: string = 123;' } })
 
       // Click run button
@@ -212,11 +214,11 @@ describe('CodeRunner Integration Tests', () => {
       render(<CodeRunner />)
 
       // Switch to PHP
-      const languageSelect = screen.getByRole('combobox', { name: /语言/i })
+      const languageSelect = screen.getAllByRole('combobox')[0]
       fireEvent.change(languageSelect, { target: { value: 'php' } })
 
       // Set PHP code
-      const codeEditor = screen.getByTestId('editor-textarea')
+      const codeEditor = screen.getByTestId('code-editor-container')
       fireEvent.change(codeEditor, { target: { value: '<?php echo "Hello World"; ?>' } })
 
       // Click run button
@@ -239,11 +241,11 @@ describe('CodeRunner Integration Tests', () => {
       render(<CodeRunner />)
 
       // Switch to PHP
-      const languageSelect = screen.getByRole('combobox', { name: /语言/i })
+      const languageSelect = screen.getAllByRole('combobox')[0]
       fireEvent.change(languageSelect, { target: { value: 'php' } })
 
       // Set PHP code
-      const codeEditor = screen.getByTestId('editor-textarea')
+      const codeEditor = screen.getByTestId('code-editor-container')
       fireEvent.change(codeEditor, { target: { value: '<?php invalid_syntax(); ?>' } })
 
       // Click run button
@@ -269,7 +271,7 @@ describe('CodeRunner Integration Tests', () => {
       fireEvent.click(jsTemplate)
 
       await waitFor(() => {
-        const codeEditor = screen.getByTestId('editor-textarea')
+        const codeEditor = screen.getByTestId('code-editor-container')
         expect(codeEditor).toHaveValue('console.log("Hello World");')
       })
     })
@@ -278,7 +280,7 @@ describe('CodeRunner Integration Tests', () => {
       render(<CodeRunner />)
 
       // Switch to TypeScript
-      const languageSelect = screen.getByRole('combobox', { name: /语言/i })
+      const languageSelect = screen.getAllByRole('combobox')[0]
       fireEvent.change(languageSelect, { target: { value: 'typescript' } })
 
       // Click template button
@@ -290,7 +292,7 @@ describe('CodeRunner Integration Tests', () => {
       fireEvent.click(tsTemplate)
 
       await waitFor(() => {
-        const codeEditor = screen.getByTestId('editor-textarea')
+        const codeEditor = screen.getByTestId('code-editor-container')
         expect(codeEditor).toHaveValue(expect.stringContaining('interface'))
       })
     })
@@ -299,7 +301,7 @@ describe('CodeRunner Integration Tests', () => {
       render(<CodeRunner />)
 
       // Switch to PHP
-      const languageSelect = screen.getByRole('combobox', { name: /语言/i })
+      const languageSelect = screen.getAllByRole('combobox')[0]
       fireEvent.change(languageSelect, { target: { value: 'php' } })
 
       // Click template button
@@ -311,7 +313,7 @@ describe('CodeRunner Integration Tests', () => {
       fireEvent.click(phpTemplate)
 
       await waitFor(() => {
-        const codeEditor = screen.getByTestId('editor-textarea')
+        const codeEditor = screen.getByTestId('code-editor-container')
         expect(codeEditor).toHaveValue(expect.stringContaining('<?php'))
       })
     })
@@ -322,7 +324,7 @@ describe('CodeRunner Integration Tests', () => {
       render(<CodeRunner />)
 
       // Set code and execute
-      const codeEditor = screen.getByTestId('editor-textarea')
+      const codeEditor = screen.getByTestId('code-editor-container')
       fireEvent.change(codeEditor, { target: { value: 'console.log("Test output")' } })
 
       const runButton = screen.getByRole('button', { name: /运行/i })
@@ -336,7 +338,7 @@ describe('CodeRunner Integration Tests', () => {
       render(<CodeRunner />)
 
       // First execution
-      const codeEditor = screen.getByTestId('editor-textarea')
+      const codeEditor = screen.getByTestId('code-editor-container')
       fireEvent.change(codeEditor, { target: { value: 'console.log("First")' } })
 
       const runButton = screen.getByRole('button', { name: /运行/i })
@@ -378,7 +380,7 @@ describe('CodeRunner Integration Tests', () => {
 
       render(<CodeRunner />)
 
-      const codeEditor = screen.getByTestId('editor-textarea')
+      const codeEditor = screen.getByTestId('code-editor-container')
       fireEvent.change(codeEditor, { target: { value: 'console.log("Performance test")' } })
 
       const runButton = screen.getByRole('button', { name: /运行/i })
@@ -399,7 +401,7 @@ describe('CodeRunner Integration Tests', () => {
 
       render(<CodeRunner />)
 
-      const codeEditor = screen.getByTestId('editor-textarea')
+      const codeEditor = screen.getByTestId('code-editor-container')
       fireEvent.change(codeEditor, { target: { value: 'localStorage.getItem("key")' } })
 
       const runButton = screen.getByRole('button', { name: /运行/i })

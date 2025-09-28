@@ -58,7 +58,7 @@ export function CodeEditor() {
   return (
     <div className="flex flex-col h-full">
       {/* 编辑器 */}
-      <div className="flex-1 relative">
+      <div className="flex-1 relative" data-testid="code-editor-container">
         <Editor
           height="100%"
           language={language}

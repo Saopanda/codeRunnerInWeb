@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { StatusBar } from '../status-bar'
-import type { CompileState } from '../../stores/code-runner-store'
+import type { CompileState, CodeOutput } from '../../stores/code-runner-store'
 
 // Mock useCodeRunnerStore
 const mockStore = {
@@ -21,7 +21,8 @@ const mockStore = {
     compileTime: null as number | null,
     firstCompileTime: null as number | null
   } as CompileState,
-  language: 'javascript' as const
+  language: 'javascript' as 'javascript' | 'typescript' | 'php',
+  outputs: [] as CodeOutput[]
 }
 
 vi.mock('../../stores/code-runner-store', () => ({
@@ -48,13 +49,13 @@ describe('StatusBar', () => {
       firstCompileTime: null
     }
     mockStore.language = 'javascript'
+    mockStore.outputs = []
   })
 
   describe('rendering', () => {
     it('should render with default state', () => {
       render(<StatusBar />)
       
-      expect(screen.getByText('等待编译')).toBeInTheDocument()
       expect(screen.getByText('等待执行')).toBeInTheDocument()
     })
   })
@@ -94,14 +95,15 @@ describe('StatusBar', () => {
   })
 
   describe('compilation status', () => {
-    it('should show idle compilation state', () => {
+    it('should show idle compilation state for TypeScript', () => {
+      mockStore.language = 'typescript'
       render(<StatusBar />)
       
-      // Should not show compilation status when idle
-      expect(screen.queryByText('编译中')).not.toBeInTheDocument()
+      expect(screen.getByText('等待编译')).toBeInTheDocument()
     })
 
-    it('should show compiling state', () => {
+    it('should show compiling state for TypeScript', () => {
+      mockStore.language = 'typescript'
       mockStore.compileState.isCompiling = true
       
       render(<StatusBar />)
@@ -109,7 +111,8 @@ describe('StatusBar', () => {
       expect(screen.getByText('编译中...')).toBeInTheDocument()
     })
 
-    it('should show compilation success', () => {
+    it('should show compilation success for TypeScript', () => {
+      mockStore.language = 'typescript'
       mockStore.compileState.compileTime = 800
       
       render(<StatusBar />)
@@ -118,7 +121,8 @@ describe('StatusBar', () => {
       expect(screen.getByText('(800ms)')).toBeInTheDocument()
     })
 
-    it('should show compilation errors', () => {
+    it('should show compilation errors for TypeScript', () => {
+      mockStore.language = 'typescript'
       mockStore.compileState.compileErrors = [
         'Syntax error'
       ]
@@ -128,7 +132,8 @@ describe('StatusBar', () => {
       expect(screen.getByText('编译失败')).toBeInTheDocument()
     })
 
-    it('should show first compilation time', () => {
+    it('should show first compilation time for TypeScript', () => {
+      mockStore.language = 'typescript'
       mockStore.compileState.firstCompileTime = 1200
       
       render(<StatusBar />)
@@ -164,7 +169,8 @@ describe('StatusBar', () => {
   })
 
   describe('combined states', () => {
-    it('should show both execution and compilation status', () => {
+    it('should show both execution and compilation status for TypeScript', () => {
+      mockStore.language = 'typescript'
       mockStore.executionState.executionTime = 1000
       mockStore.compileState.compileTime = 500
       
@@ -186,7 +192,8 @@ describe('StatusBar', () => {
   })
 
   describe('error states', () => {
-    it('should show compilation errors when present', () => {
+    it('should show compilation errors when present for TypeScript', () => {
+      mockStore.language = 'typescript'
       mockStore.compileState.compileErrors = [
         'Type error'
       ]
@@ -196,7 +203,8 @@ describe('StatusBar', () => {
       expect(screen.getByText('编译失败')).toBeInTheDocument()
     })
 
-    it('should show warnings when present', () => {
+    it('should show warnings when present for TypeScript', () => {
+      mockStore.language = 'typescript'
       mockStore.compileState.compileWarnings = [
         'Unused variable'
       ]
@@ -213,7 +221,7 @@ describe('StatusBar', () => {
       render(<StatusBar />)
       
       // StatusBar doesn't display language information in the current implementation
-      expect(screen.getByText('等待编译')).toBeInTheDocument()
+      expect(screen.getByText('等待执行')).toBeInTheDocument()
     })
 
     it('should update status for screen readers', () => {
