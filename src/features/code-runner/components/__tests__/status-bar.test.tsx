@@ -160,6 +160,8 @@ describe('StatusBar', () => {
     })
 
     it('should format compilation time correctly', () => {
+      mockStore.language = 'typescript'
+      mockStore.compileState.isCompiling = false
       mockStore.compileState.compileTime = 2000
       
       render(<StatusBar />)

@@ -20,7 +20,7 @@ export function StatusBar() {
   }
 
   const getCompileStatus = () => {
-    if (compileState.isCompiling) {
+    if (compileState?.isCompiling) {
       return {
         icon: <Loader2 className="h-3 w-3 animate-spin" />,
         text: '编译中...',
@@ -28,19 +28,19 @@ export function StatusBar() {
       }
     }
     
-    if (compileState.compileErrors.length > 0) {
+    if (compileState?.compileErrors?.length > 0) {
       return {
         icon: <XCircle className="h-3 w-3" />,
         text: '编译失败',
-        time: compileState.compileTime
+        time: compileState?.compileTime
       }
     }
     
-    if (compileState.compileTime !== null) {
+    if (compileState?.compileTime !== null) {
       return {
         icon: <CheckCircle className="h-3 w-3" />,
         text: '编译完成',
-        time: compileState.compileTime
+        time: compileState?.compileTime
       }
     }
     
@@ -110,7 +110,7 @@ export function StatusBar() {
       <div className="flex items-center space-x-4">
         <span>内存: {getMemoryUsage()}MB</span>
         <span>输出: {outputs.length}条</span>
-        {needsCompilation && compileState.firstCompileTime && (
+        {needsCompilation && compileState?.firstCompileTime && (
           <span>首次编译: {formatTime(compileState.firstCompileTime)}</span>
         )}
         {executionState.firstExecutionTime && (

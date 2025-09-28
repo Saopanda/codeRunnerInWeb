@@ -45,7 +45,7 @@ vi.mock('../../security/security-manager', () => ({
 
 // Mock Monaco Editor
 vi.mock('@monaco-editor/react', () => ({
-  default: ({ onChange, onMount, value }: { onChange?: (value: string) => void; onMount?: (editor: unknown) => void; value: string }) => {
+  Editor: ({ onChange, onMount, value }: { onChange?: (value: string) => void; onMount?: (editor: unknown) => void; value: string }) => {
     const handleChange = (e: { target: { value: string } }) => {
       if (onChange) {
         onChange(e.target.value)
@@ -64,9 +64,9 @@ vi.mock('@monaco-editor/react', () => ({
     }
 
     return (
-      <div data-testid="monaco-editor">
+      <div data-testid="code-editor-container">
         <textarea
-          data-testid="editor-textarea"
+          data-testid="code-editor"
           value={value}
           onChange={handleChange}
           onFocus={handleMount}
@@ -139,7 +139,7 @@ describe('CodeRunner Simple Integration Tests', () => {
       fireEvent.change(languageSelect, { target: { value: 'typescript' } })
 
       // Set TypeScript code
-      const codeEditor = screen.getByTestId('code-editor-container')
+      const codeEditor = screen.getByTestId('code-editor')
       fireEvent.change(codeEditor, { target: { value: 'const x: number = 42;' } })
 
       // Execute
@@ -247,7 +247,7 @@ describe('CodeRunner Simple Integration Tests', () => {
       render(<CodeRunner />)
 
       // First execution
-      const codeEditor = screen.getByTestId('code-editor-container')
+      const codeEditor = screen.getByTestId('code-editor')
       fireEvent.change(codeEditor, { target: { value: 'console.log("first")' } })
 
       const runButton = screen.getByRole('button', { name: /运行/i })
@@ -284,7 +284,7 @@ describe('CodeRunner Simple Integration Tests', () => {
       
       render(<CodeRunner />)
 
-      const codeEditor = screen.getByTestId('code-editor-container')
+      const codeEditor = screen.getByTestId('code-editor')
       fireEvent.change(codeEditor, { target: { value: 'localStorage.getItem("key")' } })
 
       const runButton = screen.getByRole('button', { name: /运行/i })

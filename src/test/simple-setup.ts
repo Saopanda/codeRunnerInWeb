@@ -3,7 +3,28 @@ import { vi } from 'vitest'
 
 // Mock Monaco Editor
 vi.mock('@monaco-editor/react', () => ({
-  Editor: vi.fn(() => null),
+  Editor: vi.fn(({ onMount, value }) => {
+    const mockEditor = {
+      getValue: vi.fn(() => value || ''),
+      setValue: vi.fn(),
+      focus: vi.fn(),
+      dispose: vi.fn(),
+      updateOptions: vi.fn(),
+      getModel: vi.fn(() => ({
+        getValue: vi.fn(() => value || ''),
+        setValue: vi.fn(),
+        dispose: vi.fn(),
+      })),
+      onDidChangeModelContent: vi.fn(),
+    }
+    
+    // Simulate editor mount
+    if (onMount) {
+      setTimeout(() => onMount(mockEditor, {}), 0)
+    }
+    
+    return null
+  }),
 }))
 
 // Mock esbuild-wasm

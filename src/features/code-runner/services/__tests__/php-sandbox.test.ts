@@ -90,7 +90,8 @@ describe('PHPSandboxManager', () => {
       
       // Mock the import function to reject
       const originalImport = (global as Record<string, unknown>).import
-      ;(global as Record<string, unknown>).import = vi.fn().mockRejectedValueOnce(new Error('Import failed'))
+      const mockImport = vi.fn().mockRejectedValueOnce(new Error('Import failed'))
+      ;(global as Record<string, unknown>).import = mockImport
       
       await expect(errorSandbox.initialize()).rejects.toThrow('Import failed')
       
