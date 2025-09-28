@@ -3,6 +3,8 @@ import { useCodeRunnerStore } from './stores/code-runner-store'
 import { useTheme } from '@/context/theme-provider'
 import { simpleSandboxManager } from './services/simple-sandbox'
 import { CodeRunnerErrorBoundary } from './components/error-boundary'
+import { EditorStatusBar } from './components/editor-status-bar'
+import { OutputFilters } from './components/output-filters'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Code, Play, Settings, Github, Moon, Sun, Loader2, Trash2, Square, Code2, FileText } from 'lucide-react'
@@ -214,7 +216,7 @@ test();`
       {/* 主要内容 */}
       <main className="flex-1 flex overflow-hidden">
         {/* 左侧：代码编辑器 */}
-        <div className="flex-1 flex flex-col border-r">
+        <div className="flex-1 flex flex-col border-r min-h-0">
           <div className="flex items-center justify-between p-3 border-b bg-muted/30">
             <div className="flex items-center space-x-2">
               <Code className="h-4 w-4" />
@@ -245,31 +247,37 @@ test();`
               )}
             </Button>
           </div>
-          <div className="flex-1">
+          <div className="flex-1 min-h-0">
             <Suspense fallback={<LoadingSpinner message="加载代码编辑器..." />}>
               <CodeEditor />
             </Suspense>
           </div>
+          {/* 编辑器状态栏移到底部 */}
+          <EditorStatusBar />
         </div>
 
         {/* 右侧：输出结果 */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-h-0">
           <div className="flex items-center justify-between p-3 border-b bg-muted/30">
             <div className="flex items-center space-x-2">
               <Play className="h-4 w-4" />
               <span className="font-medium">输出结果</span>
             </div>
-            <Button
-              onClick={handleClearOutputs}
-              variant="outline"
-              size="sm"
-              className="flex items-center space-x-1"
-            >
-              <Trash2 className="h-4 w-4" />
-              <span>清空</span>
-            </Button>
+            <div className="flex items-center space-x-3">
+              {/* 筛选控件 */}
+              <OutputFilters />
+              <Button
+                onClick={handleClearOutputs}
+                variant="outline"
+                size="sm"
+                className="flex items-center space-x-1"
+              >
+                <Trash2 className="h-4 w-4" />
+                <span>清空</span>
+              </Button>
+            </div>
           </div>
-          <div className="flex-1">
+          <div className="flex-1 min-h-0">
             <Suspense fallback={<LoadingSpinner message="加载输出面板..." />}>
               <OutputDisplay />
             </Suspense>
@@ -277,22 +285,7 @@ test();`
         </div>
       </main>
 
-      {/* 状态栏 */}
-      <footer className="flex items-center justify-between px-4 py-2 text-xs text-muted-foreground bg-muted/30 border-t">
-        <div className="flex items-center space-x-6">
-          <span className="flex items-center space-x-1">
-            <Code className="h-3 w-3" />
-            <span>{language === 'typescript' ? 'TypeScript' : language === 'php' ? 'PHP' : 'JavaScript'}</span>
-          </span>
-          <span>{code.length} 字符</span>
-          <span>{code.split('\n').length} 行</span>
-          <span>在线脚本代码运行器</span>
-        </div>
-        
-        <div className="flex items-center space-x-4">
-          {/* 右侧保持留空状态 */}
-        </div>
-      </footer>
+
       </div>
     </CodeRunnerErrorBoundary>
   )

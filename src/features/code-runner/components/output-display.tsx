@@ -1,8 +1,7 @@
-import { useMemo } from 'react'
+import { useMemo, useEffect, useRef } from 'react'
 import { useCodeRunnerStore } from '../stores/code-runner-store'
 import { useTheme } from '@/context/theme-provider'
 import { StatusBar } from './status-bar'
-import { OutputToolbar } from './output-toolbar'
 import { EnhancedOutputLine } from './enhanced-output-line'
 
 interface OutputDisplayProps {
@@ -10,8 +9,10 @@ interface OutputDisplayProps {
 }
 
 export function OutputDisplay({ className }: OutputDisplayProps) {
-  const { outputs, filter, searchTerm, selectedOutputs, toggleOutputSelection } = useCodeRunnerStore()
+  const { outputs, filter, searchTerm } = useCodeRunnerStore()
   const { resolvedTheme } = useTheme()
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const shouldAutoScroll = useRef(true)
 
   // 过滤输出
   const filteredOutputs = useMemo(() => {
@@ -50,54 +51,69 @@ export function OutputDisplay({ className }: OutputDisplayProps) {
 
   const terminalTheme = getTerminalTheme()
 
+  // 自动滚动到底部
+  useEffect(() => {
+    if (shouldAutoScroll.current && scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight
+    }
+  }, [filteredOutputs])
+
+  // 监听用户滚动行为
+  const handleScroll = () => {
+    if (scrollContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current
+      // 如果用户滚动到接近底部（容差10px），则启用自动滚动
+      shouldAutoScroll.current = scrollTop + clientHeight >= scrollHeight - 10
+    }
+  }
+
   return (
     <div className={`flex flex-col h-full ${className}`}>
-      {/* 状态栏 */}
-      <StatusBar />
-      
-      {/* 工具栏 */}
-      <OutputToolbar />
+
       
       {/* 终端风格输出内容 */}
-      <div className={`flex-1 ${terminalTheme.background} ${terminalTheme.text} font-mono text-sm overflow-y-auto`}>
-        <div className="min-h-64">
-          {filteredOutputs.length === 0 ? (
-            <div className={`flex items-center justify-center h-32 ${terminalTheme.emptyText}`}>
-              <div className="text-center">
-                {outputs.length === 0 ? (
-                  <>
-                    <div className="text-lg mb-2">🚀</div>
-                    <div>等待执行代码...</div>
-                    <div className="text-xs mt-1 opacity-60">点击运行按钮开始执行</div>
-                  </>
-                ) : (
-                  <>
-                    <div className="text-lg mb-2">🔍</div>
-                    <div>没有匹配的输出</div>
-                    <div className="text-xs mt-1 opacity-60">
-                      {filter !== 'all' && `当前过滤: ${filter}`}
-                      {searchTerm && `搜索: "${searchTerm}"`}
-                    </div>
-                  </>
-                )}
-              </div>
+      <div 
+        ref={scrollContainerRef}
+        onScroll={handleScroll}
+        className={`flex-1 ${terminalTheme.background} ${terminalTheme.text} font-mono text-sm overflow-y-auto p-2`}
+      >
+        {filteredOutputs.length === 0 ? (
+          <div className={`flex items-center justify-center h-32 ${terminalTheme.emptyText}`}>
+            <div className="text-center">
+              {outputs.length === 0 ? (
+                <>
+                  <div className="text-lg mb-2">🚀</div>
+                  <div>等待执行代码...</div>
+                  <div className="text-xs mt-1 opacity-60">点击运行按钮开始执行</div>
+                </>
+              ) : (
+                <>
+                  <div className="text-lg mb-2">🔍</div>
+                  <div>没有匹配的输出</div>
+                  <div className="text-xs mt-1 opacity-60">
+                    {filter !== 'all' && `当前过滤: ${filter}`}
+                    {searchTerm && `搜索: "${searchTerm}"`}
+                  </div>
+                </>
+              )}
             </div>
-          ) : (
-            <div className="space-y-0">
-              {filteredOutputs.map((output) => (
-                <EnhancedOutputLine
-                  key={output.id}
-                  output={output}
-                  isSelected={selectedOutputs.includes(output.id)}
-                  onToggleSelect={toggleOutputSelection}
-                  showTimestamp={true}
-                  showCheckbox={true}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          <div className="space-y-0">
+            {filteredOutputs.map((output) => (
+              <EnhancedOutputLine
+                key={output.id}
+                output={output}
+                showTimestamp={true}
+                showCheckbox={false}
+              />
+            ))}
+          </div>
+        )}
       </div>
+      
+      {/* 状态栏移到底部 */}
+      <StatusBar />
     </div>
   )
 }
