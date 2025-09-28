@@ -1,0 +1,425 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { PHPSandboxManager } from '../php-sandbox'
+// import { useCodeRunnerStore } from '../../stores/code-runner-store'
+
+// Mock php-wasm
+const mockPhpWeb = {
+  run: vi.fn(),
+  destroy: vi.fn(),
+  addEventListener: vi.fn(),
+  removeEventListener: vi.fn()
+}
+
+// Helper function to setup mock for different scenarios
+const setupMockForScenario = (scenario: string) => {
+  mockPhpWeb.addEventListener.mockImplementation((event: string, callback: (event: { detail?: string }) => void) => {
+    if (event === 'ready') {
+      setTimeout(() => callback({}), 0)
+    } else if (event === 'output') {
+      if (scenario === 'success') {
+        setTimeout(() => callback({ detail: 'Hello World' }), 10)
+      } else if (scenario === 'multiline') {
+        setTimeout(() => callback({ detail: 'Line 1\nLine 2\nLine 3' }), 10)
+      } else if (scenario === 'empty') {
+        // No output for empty scenario
+      }
+    } else if (event === 'error') {
+      if (scenario === 'error') {
+        setTimeout(() => callback({ detail: 'Fatal error: Call to undefined function undefined_function()' }), 10)
+      } else if (scenario === 'warning') {
+        setTimeout(() => callback({ detail: 'Warning: Undefined variable $undefined_var' }), 10)
+      } else if (scenario === 'runtime') {
+        setTimeout(() => callback({ detail: 'Runtime error' }), 10)
+      }
+    }
+  })
+}
+
+vi.mock('php-wasm/PhpWeb.mjs', () => ({
+  PhpWeb: vi.fn(() => mockPhpWeb)
+}))
+
+// Mock store
+const mockStore = {
+  addOutput: vi.fn(),
+  setExecutionState: vi.fn(),
+  clearOutputs: vi.fn()
+}
+
+vi.mock('../../stores/code-runner-store', () => ({
+  useCodeRunnerStore: {
+    getState: () => mockStore
+  }
+}))
+
+describe('PHPSandboxManager', () => {
+  let sandbox: PHPSandboxManager
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    sandbox = new PHPSandboxManager()
+  })
+
+  afterEach(() => {
+    if (sandbox) {
+      sandbox.destroy()
+    }
+  })
+
+  describe('initialization', () => {
+    it('should initialize successfully', async () => {
+      await expect(sandbox.initialize()).resolves.toBeUndefined()
+    })
+
+    it('should handle initialization errors', async () => {
+      // Create a new sandbox instance to test initialization error
+      const errorSandbox = new PHPSandboxManager()
+      
+      // Mock the import function to reject
+      const originalImport = (global as Record<string, unknown>).import
+      ;(global as Record<string, unknown>).import = vi.fn().mockRejectedValueOnce(new Error('Import failed'))
+      
+      await expect(errorSandbox.initialize()).rejects.toThrow('Import failed')
+      
+      // Restore original import
+      ;(global as Record<string, unknown>).import = originalImport
+    })
+
+    it('should not reinitialize if already initialized', async () => {
+      await sandbox.initialize()
+      const originalImport = (global as Record<string, unknown>).import
+      const importSpy = vi.fn().mockResolvedValue({ default: {} })
+      ;(global as Record<string, unknown>).import = importSpy
+      
+      await sandbox.initialize()
+      
+      expect(importSpy).toHaveBeenCalledTimes(0) // Should not call import again
+      
+      // Restore original import
+      ;(global as Record<string, unknown>).import = originalImport
+    })
+  })
+
+  describe('code execution', () => {
+    beforeEach(async () => {
+      await sandbox.initialize()
+      
+      // Mock addEventListener to immediately trigger ready event
+      mockPhpWeb.addEventListener.mockImplementation((event: string, callback: (event: { detail?: string }) => void) => {
+        if (event === 'ready') {
+          // Immediately call the callback to simulate ready event
+          setTimeout(() => callback({}), 0)
+        } else if (event === 'output') {
+          // Mock output event
+          setTimeout(() => callback({ detail: 'Hello World' }), 10)
+        } else if (event === 'error') {
+          // Mock error event
+          setTimeout(() => callback({ detail: 'Fatal error: Call to undefined function undefined_function()' }), 10)
+        }
+      })
+    })
+
+    it('should execute simple PHP code', async () => {
+      const code = '<?php echo "Hello World"; ?>'
+      const config = {
+        timeout: 5000,
+        maxMemory: 50 * 1024 * 1024,
+        allowedAPIs: [],
+        blockedAPIs: []
+      }
+
+      // Setup mock for success scenario
+      setupMockForScenario('success')
+
+      await sandbox.executeCode(code, config)
+
+      expect(mockPhpWeb.run).toHaveBeenCalledWith(code)
+      expect(mockStore.addOutput).toHaveBeenCalledWith({
+        type: 'output',
+        message: 'Hello World',
+        source: 'php_output',
+        language: 'php'
+      })
+    })
+
+    it('should handle PHP errors', async () => {
+      const code = '<?php undefined_function(); ?>'
+      const config = {
+        timeout: 5000,
+        maxMemory: 50 * 1024 * 1024,
+        allowedAPIs: [],
+        blockedAPIs: []
+      }
+
+      // Setup mock for error scenario
+      setupMockForScenario('error')
+
+      await sandbox.executeCode(code, config)
+
+      expect(mockStore.addOutput).toHaveBeenCalledWith({
+        type: 'error',
+        message: 'Fatal error: Call to undefined function undefined_function()',
+        source: 'php_error',
+        language: 'php'
+      })
+    })
+
+    it('should handle execution timeout', async () => {
+      const code = '<?php while(true) {} ?>'
+      const config = {
+        timeout: 100,
+        maxMemory: 50 * 1024 * 1024,
+        allowedAPIs: [],
+        blockedAPIs: []
+      }
+
+      mockPhpWeb.run.mockImplementation(() => 
+        new Promise(resolve => setTimeout(resolve, 200))
+      )
+
+      await sandbox.executeCode(code, config)
+
+      expect(mockStore.addOutput).toHaveBeenCalledWith({
+        type: 'error',
+        message: 'PHP 代码执行超时',
+        source: 'error',
+        language: 'php'
+      })
+    })
+
+    it('should handle PHP warnings', async () => {
+      const code = '<?php $undefined_var; ?>'
+      const config = {
+        timeout: 5000,
+        maxMemory: 50 * 1024 * 1024,
+        allowedAPIs: [],
+        blockedAPIs: []
+      }
+
+      mockPhpWeb.run.mockResolvedValue({
+        stdout: '',
+        stderr: 'Warning: Undefined variable $undefined_var',
+        exitCode: 0
+      })
+
+      await sandbox.executeCode(code, config)
+
+      expect(mockStore.addOutput).toHaveBeenCalledWith({
+        type: 'warn',
+        message: 'Warning: Undefined variable $undefined_var',
+        source: 'php_error',
+        language: 'php'
+      })
+    })
+  })
+
+  describe('execution state management', () => {
+    beforeEach(async () => {
+      await sandbox.initialize()
+    })
+
+    it('should set execution state when starting', async () => {
+      const code = '<?php echo "test"; ?>'
+      const config = {
+        timeout: 5000,
+        maxMemory: 50 * 1024 * 1024,
+        allowedAPIs: [],
+        blockedAPIs: []
+      }
+
+      mockPhpWeb.run.mockResolvedValue({
+        stdout: 'test',
+        stderr: '',
+        exitCode: 0
+      })
+
+      await sandbox.executeCode(code, config)
+
+      expect(mockStore.setExecutionState).toHaveBeenCalledWith({
+        isRunning: true,
+        executionId: expect.any(String),
+        startTime: expect.any(Number),
+        executionTime: null
+      })
+    })
+
+    it('should update execution state when completed', async () => {
+      const code = '<?php echo "test"; ?>'
+      const config = {
+        timeout: 5000,
+        maxMemory: 50 * 1024 * 1024,
+        allowedAPIs: [],
+        blockedAPIs: []
+      }
+
+      mockPhpWeb.run.mockResolvedValue({
+        stdout: 'test',
+        stderr: '',
+        exitCode: 0
+      })
+
+      await sandbox.executeCode(code, config)
+
+      expect(mockStore.setExecutionState).toHaveBeenCalledWith({
+        isRunning: false,
+        executionTime: expect.any(Number)
+      })
+    })
+  })
+
+  describe('error handling', () => {
+    beforeEach(async () => {
+      await sandbox.initialize()
+    })
+
+    it('should handle PHP-WASM runtime errors', async () => {
+      const code = '<?php echo "test"; ?>'
+      const config = {
+        timeout: 5000,
+        maxMemory: 50 * 1024 * 1024,
+        allowedAPIs: [],
+        blockedAPIs: []
+      }
+
+      mockPhpWeb.run.mockRejectedValue(new Error('Runtime error'))
+
+      await sandbox.executeCode(code, config)
+
+      expect(mockStore.addOutput).toHaveBeenCalledWith({
+        type: 'error',
+        message: 'PHP 执行错误: Runtime error',
+        source: 'error',
+        language: 'php'
+      })
+    })
+
+    it('should handle initialization errors during execution', async () => {
+      const code = '<?php echo "test"; ?>'
+      const config = {
+        timeout: 5000,
+        maxMemory: 50 * 1024 * 1024,
+        allowedAPIs: [],
+        blockedAPIs: []
+      }
+
+      // Create new instance without initialization
+      const uninitializedSandbox = new PHPSandboxManager()
+
+      await uninitializedSandbox.executeCode(code, config)
+
+      expect(mockStore.addOutput).toHaveBeenCalledWith({
+        type: 'error',
+        message: expect.stringContaining('PHP-WASM 未初始化'),
+        source: 'error',
+        language: 'php'
+      })
+    })
+  })
+
+  describe('cleanup', () => {
+    it('should destroy PHP instance on cleanup', async () => {
+      await sandbox.initialize()
+      
+      // Ensure currentPhpInstance is set
+      sandbox['currentPhpInstance'] = mockPhpWeb
+      
+      sandbox.destroy()
+      
+      expect(mockPhpWeb.destroy).toHaveBeenCalled()
+    })
+
+    it('should handle cleanup when not initialized', () => {
+      expect(() => sandbox.destroy()).not.toThrow()
+    })
+  })
+
+  describe('concurrent execution', () => {
+    beforeEach(async () => {
+      await sandbox.initialize()
+    })
+
+    it('should prevent concurrent execution', async () => {
+      const code = '<?php sleep(1); echo "test"; ?>'
+      const config = {
+        timeout: 5000,
+        maxMemory: 50 * 1024 * 1024,
+        allowedAPIs: [],
+        blockedAPIs: []
+      }
+
+      mockPhpWeb.run.mockImplementation(() => 
+        new Promise(resolve => setTimeout(resolve, 100))
+      )
+
+      // Start first execution
+      const firstExecution = sandbox.executeCode(code, config)
+      
+      // Try to start second execution (should return early without error)
+      const secondExecution = sandbox.executeCode(code, config)
+      
+      // Both executions should complete (first one executes, second one returns early)
+      await Promise.all([firstExecution, secondExecution])
+      
+      // Verify that the warning was added for concurrent execution
+      expect(mockStore.addOutput).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'warn',
+          message: 'PHP 代码正在执行中，请等待完成后再试',
+          source: 'console'
+        })
+      )
+    })
+  })
+
+  describe('output formatting', () => {
+    beforeEach(async () => {
+      await sandbox.initialize()
+    })
+
+    it('should format multiple lines of output', async () => {
+      const code = '<?php echo "Line 1\nLine 2\nLine 3"; ?>'
+      const config = {
+        timeout: 5000,
+        maxMemory: 50 * 1024 * 1024,
+        allowedAPIs: [],
+        blockedAPIs: []
+      }
+
+      mockPhpWeb.run.mockResolvedValue({
+        stdout: 'Line 1\nLine 2\nLine 3',
+        stderr: '',
+        exitCode: 0
+      })
+
+      await sandbox.executeCode(code, config)
+
+      expect(mockStore.addOutput).toHaveBeenCalledWith({
+        type: 'output',
+        message: 'Line 1\nLine 2\nLine 3',
+        source: 'php_output',
+        language: 'php'
+      })
+    })
+
+    it('should handle empty output', async () => {
+      const code = '<?php // Empty code ?>'
+      const config = {
+        timeout: 5000,
+        maxMemory: 50 * 1024 * 1024,
+        allowedAPIs: [],
+        blockedAPIs: []
+      }
+
+      mockPhpWeb.run.mockResolvedValue({
+        stdout: '',
+        stderr: '',
+        exitCode: 0
+      })
+
+      await sandbox.executeCode(code, config)
+
+      // Should not add empty output
+      expect(mockStore.addOutput).not.toHaveBeenCalled()
+    })
+  })
+})

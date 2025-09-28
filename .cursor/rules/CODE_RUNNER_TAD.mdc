@@ -1,0 +1,311 @@
+---
+description: 在线代码运行平台技术架构设计文档
+alwaysApply: true
+---
+
+# 在线代码运行平台 TAD
+
+## 架构概览
+
+### 模块关系与数据流
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Code Editor   │───▶│  Sandbox Manager│───▶│  Output Display │
+│   (Monaco)      │    │  (Multi-Lang)   │    │   (Console)     │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+         │                       │                       ▲
+         │                       │                       │
+         ▼                       ▼                       │
+┌─────────────────┐    ┌─────────────────┐              │
+│  Template Store │    │  Security Layer │              │
+│   (LocalStorage)│    │   (Multi-Layer) │              │
+└─────────────────┘    └─────────────────┘              │
+         │                       │                       │
+         ▼                       ▼                       │
+┌─────────────────┐    ┌─────────────────┐              │
+│  Language       │    │  Execution      │              │
+│  Manager        │    │  Engines        │              │
+│  (JS/TS/PHP)    │    │  (Worker/WASM)  │              │
+└─────────────────┘    └─────────────────┘              │
+                                                         │
+┌─────────────────┐    ┌─────────────────┐              │
+│   UI Controls   │───▶│  State Manager  │──────────────┘
+│  (Run/Stop/Save)│    │   (Zustand)     │
+└─────────────────┘    └─────────────────┘
+```
+
+### 核心组件
+
+1. **CodeEditor**: Monaco Editor 集成组件（支持多语言）
+2. **SandboxManager**: 多语言沙箱管理（Web Worker + iframe + PHP-WASM）
+3. **OutputDisplay**: 控制台输出显示组件
+4. **TemplateStore**: 多语言代码模板管理
+5. **SecurityLayer**: 多层安全隔离层
+6. **LanguageManager**: 语言切换和配置管理
+7. **StateManager**: 状态管理（使用 Zustand）
+
+## 数据模型/Schema
+
+### 代码执行状态
+```typescript
+interface CodeExecutionState {
+  isRunning: boolean;
+  isPaused: boolean;
+  executionId: string | null;
+  startTime: number | null;
+  timeoutId: number | null;
+  language: 'javascript' | 'typescript' | 'php';
+}
+
+interface CodeOutput {
+  id: string;
+  type: 'log' | 'error' | 'warn' | 'info' | 'output';
+  message: string;
+  timestamp: number;
+  source: 'console' | 'error' | 'timeout' | 'php_output' | 'php_error';
+  language: 'javascript' | 'typescript' | 'php';
+}
+```
+
+### 代码模板
+```typescript
+interface CodeTemplate {
+  id: string;
+  name: string;
+  description: string;
+  code: string;
+  language: 'javascript' | 'typescript' | 'php';
+  category: 'basic' | 'async' | 'dom' | 'api' | 'oop' | 'functions';
+  tags: string[];
+}
+```
+
+### 沙箱配置
+```typescript
+interface SandboxConfig {
+  timeout: number; // 执行超时时间（毫秒）
+  maxMemory: number; // 最大内存使用（MB）
+  allowedAPIs: string[]; // 允许的API列表
+  blockedAPIs: string[]; // 禁止的API列表
+  language: 'javascript' | 'typescript' | 'php'; // 目标语言
+}
+
+interface PHPSandboxConfig extends SandboxConfig {
+  phpVersion: string;
+  enabledExtensions: string[];
+  memoryLimit: number;
+  maxExecutionTime: number;
+  maxInputVars: number;
+  errorReporting: string;
+}
+```
+
+## 接口/API定义
+
+### 沙箱通信接口
+```typescript
+// 主线程到 Worker 的消息
+interface WorkerMessage {
+  type: 'EXECUTE_CODE' | 'STOP_EXECUTION' | 'PING';
+  payload: {
+    code?: string;
+    executionId?: string;
+    config?: SandboxConfig;
+  };
+}
+
+// Worker 到主线程的消息
+interface WorkerResponse {
+  type: 'OUTPUT' | 'ERROR' | 'COMPLETE' | 'TIMEOUT' | 'PONG';
+  payload: {
+    executionId: string;
+    output?: CodeOutput;
+    error?: Error;
+    duration?: number;
+  };
+}
+```
+
+### 组件接口
+```typescript
+interface CodeEditorProps {
+  value: string;
+  onChange: (value: string) => void;
+  onRun: () => void;
+  onStop: () => void;
+  disabled?: boolean;
+  theme?: 'light' | 'dark';
+}
+
+interface SandboxManagerProps {
+  onOutput: (output: CodeOutput) => void;
+  onError: (error: Error) => void;
+  onComplete: (executionId: string) => void;
+  config: SandboxConfig;
+}
+```
+
+## 边界与安全
+
+### 安全隔离策略
+
+#### 1. Web Worker 隔离
+- 代码在独立的 Web Worker 中执行
+- 限制 Worker 访问主线程的全局对象
+- 通过消息传递进行通信，避免直接访问
+
+#### 2. iframe 沙箱
+- 在 iframe 中创建额外的隔离层
+- 使用 `sandbox` 属性限制 iframe 权限
+- 禁止访问父页面的 DOM 和全局变量
+
+#### 3. API 限制
+```typescript
+const ALLOWED_APIS = [
+  'console.log', 'console.error', 'console.warn', 'console.info',
+  'setTimeout', 'setInterval', 'clearTimeout', 'clearInterval',
+  'Promise', 'async/await',
+  'fetch', 'XMLHttpRequest',
+  'JSON', 'Math', 'Date', 'Array', 'Object', 'String', 'Number'
+];
+
+const BLOCKED_APIS = [
+  'eval', 'Function', 'setTimeout', 'setInterval', // 重新定义以限制
+  'document', 'window', 'localStorage', 'sessionStorage',
+  'XMLHttpRequest', 'fetch', // 需要特殊处理
+  'import', 'require', 'module', 'exports'
+];
+```
+
+#### 4. 执行限制
+- 代码执行超时：10秒
+- 内存使用限制：50MB
+- 禁止无限循环和递归
+- 限制异步操作数量
+
+### 错误处理边界
+```typescript
+interface SecurityError extends Error {
+  type: 'TIMEOUT' | 'MEMORY_LIMIT' | 'BLOCKED_API' | 'SYNTAX_ERROR';
+  code: string;
+  line?: number;
+  column?: number;
+}
+```
+
+## 依赖与集成
+
+### 核心依赖
+```json
+{
+  "monaco-editor": "^0.53.0",
+  "zustand": "^5.0.7", // 已存在
+  "@monaco-editor/react": "^4.7.0",
+  "php-wasm": "^0.0.8",
+  "esbuild-wasm": "^0.25.10"
+}
+```
+
+### 现有依赖利用
+- **React 19**: 组件开发
+- **Tailwind CSS**: 样式系统
+- **shadcn/ui**: UI 组件库
+- **TanStack Router**: 路由管理
+- **Zustand**: 状态管理
+
+### 集成点
+1. **路由集成**: 主页面路由 `/` 直接显示代码运行器
+2. **主题集成**: 支持明暗主题切换
+3. **布局集成**: 使用现有的布局组件
+4. **多语言集成**: 支持 JavaScript、TypeScript、PHP 三种语言
+
+## 测试策略
+
+### 单元测试
+- 多语言沙箱管理器功能测试
+- 代码执行逻辑测试（JS/TS/PHP）
+- 安全限制测试
+- 错误处理测试
+- TypeScript 编译测试
+- PHP-WASM 执行测试
+
+### 集成测试
+- 编辑器与沙箱集成测试
+- 输出显示功能测试
+- 模板加载和保存测试
+- 语言切换功能测试
+- 多语言并行执行测试
+
+### 安全测试
+- 恶意代码注入测试
+- API 访问限制测试
+- 内存泄漏测试
+- 超时机制测试
+- PHP 安全沙箱测试
+
+### 性能测试
+- 大量代码执行性能测试
+- 内存使用监控
+- 页面响应性测试
+- PHP-WASM 加载性能测试
+
+## 迁移/回滚与部署
+
+### 部署策略
+- 纯前端部署，无需后端服务
+- 支持静态文件托管（Netlify、Vercel等）
+- 使用现有的 Vite 构建配置
+
+### 回滚方案
+- 功能开关控制，可快速禁用代码运行器
+- 保持现有功能不受影响
+- 数据库无状态，回滚简单
+
+### 监控指标
+- 代码执行成功率
+- 平均执行时间
+- 错误类型分布
+- 用户使用频率
+
+## 架构决策与替代方案
+
+### 决策 1: 使用 Monaco Editor
+**选择**: Monaco Editor  
+**原因**: 
+- 功能完整，支持语法高亮、自动补全
+- 与 VS Code 相同的编辑体验
+- 良好的 TypeScript 支持
+
+**替代方案**: CodeMirror  
+**放弃原因**: 功能相对简单，需要更多自定义开发
+
+### 决策 2: Web Worker + iframe 双重隔离
+**选择**: 双重隔离策略  
+**原因**: 
+- 提供更强的安全保障
+- 防止恶意代码逃逸
+- 符合安全最佳实践
+
+**替代方案**: 仅使用 Web Worker  
+**放弃原因**: 安全性不够，存在逃逸风险
+
+### 决策 3: 使用 Zustand 进行状态管理
+**选择**: Zustand  
+**原因**: 
+- 项目已有 Zustand 依赖
+- 轻量级，适合简单状态管理
+- 与现有架构一致
+
+**替代方案**: Redux Toolkit  
+**放弃原因**: 过于复杂，项目已有状态管理方案
+
+### 决策 4: 本地存储代码模板
+**选择**: localStorage  
+**原因**: 
+- 纯前端实现，无需后端
+- 简单可靠
+- 符合项目无后端依赖的要求
+
+**替代方案**: IndexedDB  
+**放弃原因**: 对于简单数据存储过于复杂
