@@ -1,4 +1,4 @@
-import { XCircle, AlertTriangle, Info, Terminal, CheckCircle, Settings } from 'lucide-react'
+import { XCircle, AlertTriangle, Info, Terminal, Settings } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import type { CodeOutput } from '../stores/code-runner-store'
 
@@ -59,9 +59,8 @@ export function EnhancedOutputLine({
       hour12: false,
       hour: '2-digit',
       minute: '2-digit',
-      second: '2-digit',
-      fractionalSecondDigits: 3
-    })
+      second: '2-digit'
+    }) + '.' + date.getMilliseconds().toString().padStart(3, '0')
   }
 
   // 系统消息的特殊样式

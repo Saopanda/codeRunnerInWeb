@@ -1,4 +1,4 @@
-import { Copy, Download, Trash2, X, CheckSquare, Square } from 'lucide-react'
+import { Copy, Download, Trash2, X } from 'lucide-react'
 import { useCodeRunnerStore } from '../stores/code-runner-store'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'

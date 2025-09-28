@@ -28,15 +28,12 @@ class TypeScriptCompiler {
 
   private async doInitialize(): Promise<void> {
     try {
-      console.log('Initializing esbuild with local wasm package...')
       await esbuild.initialize({
         wasmURL: '/esbuild.wasm'
       })
       this.initialized = true
-      console.log('esbuild initialized successfully with local package')
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-      console.error('Failed to initialize esbuild:', errorMessage)
       throw new Error(`Failed to initialize esbuild: ${errorMessage}`)
     }
   }
