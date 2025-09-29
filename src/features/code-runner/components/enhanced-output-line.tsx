@@ -54,13 +54,11 @@ export function EnhancedOutputLine({
   }
 
   const formatTimestamp = (timestamp: number) => {
-    const date = new Date(timestamp)
-    return date.toLocaleTimeString('zh-CN', { 
+    return new Date(timestamp).toLocaleTimeString('zh-CN', {
       hour12: false,
       hour: '2-digit',
       minute: '2-digit',
-      second: '2-digit',
-      fractionalSecondDigits: 3
+      second: '2-digit'
     })
   }
 
@@ -94,7 +92,7 @@ export function EnhancedOutputLine({
         {getOutputIcon(output.type, output.source)}
       </div>
       
-      <div className={`flex-1 whitespace-pre-wrap break-words font-mono text-sm leading-relaxed ${getTextColor(output.type, output.source)}`}>
+      <div className={`flex-1 whitespace-pre-wrap break-words font-mono text-sm leading-relaxed overflow-hidden ${getTextColor(output.type, output.source)}`}>
         {isSystemMessage && <span className="text-xs opacity-70 mr-2">[系统]</span>}
         {output.message}
       </div>
