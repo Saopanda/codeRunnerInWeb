@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Code, Play, Settings, Github, Moon, Sun, Loader2, Trash2, Square, Code2, FileText } from 'lucide-react'
 import { typescriptExamples } from './examples/typescript-examples'
 import { phpExamples } from './examples/php-examples'
+import { pythonExamples } from './examples/python-examples'
 
 // 懒加载组件
 const CodeEditor = lazy(() => import('./components/code-editor').then(module => ({ default: module.CodeEditor })))
@@ -96,6 +97,24 @@ echo "语言: " . $name . "\n";
 echo "版本: " . $version . "\n";
 echo "很棒: " . ($isAwesome ? "是" : "否") . "\n";
 ?>`
+    } else if (language === 'python') {
+      debugTest = `# Python 基础示例
+print("Hello Python!")
+print("欢迎使用 Python 代码运行器！")
+
+# 变量和数据类型
+name = "Python"
+version = 3.11
+is_awesome = True
+
+print(f"语言: {name}")
+print(f"版本: {version}")
+print(f"很棒: {is_awesome}")
+
+# 列表操作
+numbers = [1, 2, 3, 4, 5]
+print(f"数字列表: {numbers}")
+print(f"列表长度: {len(numbers)}")`
     } else {
       debugTest = `console.log("Hello ${language === 'typescript' ? 'TypeScript' : 'JavaScript'}!");
 
@@ -118,6 +137,8 @@ test();`
       setCode(typescriptExamples[exampleKey as keyof typeof typescriptExamples])
     } else if (language === 'php' && phpExamples[exampleKey as keyof typeof phpExamples]) {
       setCode(phpExamples[exampleKey as keyof typeof phpExamples])
+    } else if (language === 'python' && pythonExamples[exampleKey as keyof typeof pythonExamples]) {
+      setCode(pythonExamples[exampleKey as keyof typeof pythonExamples])
     }
   }
 
@@ -131,7 +152,7 @@ test();`
             <Code className="h-7 w-7 text-primary" />
             <div>
               <h1 className="text-2xl font-bold text-foreground">在线脚本代码运行器</h1>
-              <p className="text-sm text-muted-foreground">安全的 JavaScript/TypeScript/PHP 脚本执行环境</p>
+              <p className="text-sm text-muted-foreground">安全的 JavaScript/TypeScript/PHP/Python 脚本执行环境</p>
             </div>
           </div>
         </div>
@@ -148,6 +169,7 @@ test();`
                 <SelectItem value="javascript">JavaScript</SelectItem>
                 <SelectItem value="typescript">TypeScript</SelectItem>
                 <SelectItem value="php">PHP</SelectItem>
+                <SelectItem value="python">Python</SelectItem>
               </SelectContent>
             </Select>
           </div>

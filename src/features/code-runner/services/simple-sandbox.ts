@@ -3,13 +3,14 @@ import { typescriptCompiler } from './typescript-compiler'
 import { performanceMonitor } from './performance-monitor'
 import { securityManager } from '../security/security-manager'
 import { phpSandboxManager } from './php-sandbox'
+import { pythonSandboxManager } from './python-sandbox'
 
 export class SimpleSandboxManager {
   private executionId: string | null = null
   private timeoutId: NodeJS.Timeout | null = null
   private startTime: number | 0 = 0
 
-  public async executeCode(code: string, config: SandboxConfig, language: 'javascript' | 'typescript' | 'php' = 'javascript'): Promise<void> {
+  public async executeCode(code: string, config: SandboxConfig, language: 'javascript' | 'typescript' | 'php' | 'python' = 'javascript'): Promise<void> {
     if (this.executionId) {
       throw new Error('已有代码正在执行中')
     }
@@ -56,6 +57,35 @@ export class SimpleSandboxManager {
         this.addOutput({
           type: 'error',
           message: `PHP 执行失败: ${error instanceof Error ? error.message : '未知错误'}`,
+          source: 'error'
+        })
+        this.stopExecution()
+        return
+      }
+    }
+
+    // 如果是 Python，使用 Python 沙箱
+    if (language === 'python') {
+      try {
+        await pythonSandboxManager.executeCode(code, config)
+        // 执行完成，停止性能监控并更新状态
+        const executionTime = stopExecutionMonitoring()
+
+        // 更新执行状态
+        const store = useCodeRunnerStore.getState()
+        store.setExecutionState({
+          isRunning: false,
+          executionTime: executionTime,
+          firstExecutionTime: store.executionState.firstExecutionTime || executionTime
+        })
+
+        this.stopExecution()
+        return
+      } catch (error) {
+        stopExecutionMonitoring() // 停止性能监控
+        this.addOutput({
+          type: 'error',
+          message: `Python 执行失败: ${error instanceof Error ? error.message : '未知错误'}`,
           source: 'error'
         })
         this.stopExecution()
@@ -411,6 +441,7 @@ export class SimpleSandboxManager {
   public destroy(): void {
     this.stopExecution()
     phpSandboxManager.destroy()
+    pythonSandboxManager.destroy()
   }
 
   public getStatus() {

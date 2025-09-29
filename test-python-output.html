@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python输出测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .output {
+            background: #f5f5f5;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 3px;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+        }
+        .error {
+            background: #ffe6e6;
+            color: #d00;
+        }
+        .success {
+            background: #e6ffe6;
+            color: #060;
+        }
+        .info {
+            background: #e6f3ff;
+            color: #0066cc;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 3px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .code-input {
+            width: 100%;
+            height: 150px;
+            font-family: 'Courier New', monospace;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Python输出显示测试</h1>
+    
+    <div class="test-section">
+        <h2>测试用例</h2>
+        <button onclick="testBasicOutput()">基础输出测试</button>
+        <button onclick="testPrintOutput()">Print输出测试</button>
+        <button onclick="testErrorOutput()">错误输出测试</button>
+        <button onclick="testMathOutput()">数学计算测试</button>
+        <button onclick="clearOutput()">清空输出</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>自定义代码测试</h2>
+        <textarea id="custom-code" class="code-input" placeholder="在这里输入Python代码...">print("Hello, Python!")
+print("这是一个自定义测试")</textarea>
+        <br>
+        <button onclick="executeCustomCode()">执行自定义代码</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>输出结果</h2>
+        <div id="output" class="output">等待测试...</div>
+    </div>
+
+    <script type="module">
+        let pyodide = null;
+        
+        function log(message, type = 'info') {
+            const element = document.getElementById('output');
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'info' ? 'info' : '';
+            element.innerHTML += `<div class="${className}">${new Date().toLocaleTimeString()}: ${message}</div>`;
+            element.scrollTop = element.scrollHeight;
+        }
+        
+        function clearOutput() {
+            document.getElementById('output').innerHTML = '';
+        }
+        
+        async function initPyodide() {
+            if (pyodide) return;
+            
+            log('正在初始化Pyodide...', 'info');
+            try {
+                const { loadPyodide } = await import('pyodide');
+                pyodide = await loadPyodide({
+                    indexURL: '/pyodide/',
+                    fullStdLib: false,
+                    packageBaseUrl: 'https://cdn.jsdelivr.net/pyodide/v0.28.2/full/'
+                });
+                
+                // 设置输出重定向
+                pyodide.globals.set('_send_output', (text, outputType) => {
+                    log(text, outputType);
+                });
+                
+                // 分步设置输出重定向
+                await setupOutputRedirection();
+                
+                log('Pyodide初始化完成！', 'success');
+            } catch (error) {
+                log(`Pyodide初始化失败: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+        
+        async function setupOutputRedirection() {
+            try {
+                // 分步设置输出重定向
+                pyodide.runPython(`import sys`);
+                pyodide.runPython(`import io`);
+                pyodide.runPython(`import builtins`);
+                
+                pyodide.runPython(`
+class OutputCapture:
+    def __init__(self, output_type='log'):
+        self.buffer = io.StringIO()
+        self.output_type = output_type
+    
+    def write(self, text):
+        if text and text.strip():
+            self.buffer.write(text)
+            _send_output(text, self.output_type)
+    
+    def flush(self):
+        pass
+`);
+                
+                pyodide.runPython(`
+stdout_capture = OutputCapture('log')
+stderr_capture = OutputCapture('error')
+original_stdout = sys.stdout
+original_stderr = sys.stderr
+sys.stdout = stdout_capture
+sys.stderr = stderr_capture
+`);
+                
+                pyodide.runPython(`
+original_print = builtins.print
+
+def custom_print(*args, **kwargs):
+    old_stdout = sys.stdout
+    sys.stdout = captured_output = io.StringIO()
+    
+    try:
+        original_print(*args, **kwargs)
+        output = captured_output.getvalue()
+        if output.strip():
+            stdout_capture.write(output)
+    finally:
+        sys.stdout = old_stdout
+
+builtins.print = custom_print
+`);
+                
+                log('输出重定向设置完成', 'info');
+            } catch (error) {
+                log(`输出重定向设置失败: ${error.message}`, 'error');
+            }
+        }
+        
+        async function executePythonCode(code) {
+            if (!pyodide) {
+                await initPyodide();
+            }
+            
+            try {
+                log(`执行代码: ${code.substring(0, 50)}${code.length > 50 ? '...' : ''}`, 'info');
+                const result = pyodide.runPython(code);
+                
+                if (result !== undefined) {
+                    log(`返回值: ${result}`, 'info');
+                }
+                
+                log('代码执行完成', 'success');
+            } catch (error) {
+                log(`执行错误: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testBasicOutput() {
+            await executePythonCode(`
+print("=== 基础输出测试 ===")
+print("Hello, World!")
+print("Python版本:", __import__('sys').version)
+print("测试完成")
+`);
+        }
+        
+        async function testPrintOutput() {
+            await executePythonCode(`
+print("=== Print输出测试 ===")
+print("第一行输出")
+print("第二行输出")
+print("第三行输出")
+print("包含数字:", 123)
+print("包含变量:", "变量值")
+`);
+        }
+        
+        async function testErrorOutput() {
+            await executePythonCode(`
+print("=== 错误输出测试 ===")
+try:
+    print("尝试执行错误代码...")
+    result = 1 / 0
+except ZeroDivisionError as e:
+    print("捕获到错误:", str(e))
+    print("错误类型:", type(e).__name__)
+`);
+        }
+        
+        async function testMathOutput() {
+            await executePythonCode(`
+print("=== 数学计算测试 ===")
+import math
+
+# 基本计算
+a = 10
+b = 20
+print(f"{a} + {b} = {a + b}")
+print(f"{a} * {b} = {a * b}")
+
+# 数学函数
+print(f"sqrt(16) = {math.sqrt(16)}")
+print(f"sin(π/2) = {math.sin(math.pi/2)}")
+
+# 列表计算
+numbers = [1, 2, 3, 4, 5]
+squares = [x**2 for x in numbers]
+print(f"平方数: {squares}")
+print(f"总和: {sum(squares)}")
+`);
+        }
+        
+        async function executeCustomCode() {
+            const code = document.getElementById('custom-code').value;
+            if (!code.trim()) {
+                log('请输入Python代码', 'error');
+                return;
+            }
+            await executePythonCode(code);
+        }
+        
+        // 页面加载完成后自动初始化
+        window.addEventListener('load', async () => {
+            try {
+                await initPyodide();
+                log('页面加载完成，可以开始测试', 'info');
+            } catch (error) {
+                log('初始化失败，请刷新页面重试', 'error');
+            }
+        });
+    </script>
+</body>
+</html>

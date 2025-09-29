@@ -26,7 +26,7 @@ export interface SandboxConfig {
   blockedAPIs: string[] // 禁止的API列表
 }
 
-export type Language = 'javascript' | 'typescript' | 'php'
+export type Language = 'javascript' | 'typescript' | 'php' | 'python'
 
 export interface CompileState {
   isCompiling: boolean
