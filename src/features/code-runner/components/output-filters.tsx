@@ -34,7 +34,7 @@ export function OutputFilters() {
       {/* 过滤器 */}
       <div className="flex items-center">
         <Select value={filter} onValueChange={setFilter}>
-          <SelectTrigger className="w-28 h-8 text-xs border-input bg-background hover:bg-accent hover:text-accent-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 px-2 py-1">
+          <SelectTrigger size="sm" className="w-28 text-xs border-input bg-background hover:bg-accent hover:text-accent-foreground focus:ring-2 focus:ring-ring focus:ring-offset-2 px-2 py-1">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

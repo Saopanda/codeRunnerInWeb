@@ -131,7 +131,6 @@ test();`
             <Code className="h-7 w-7 text-primary" />
             <div>
               <h1 className="text-2xl font-bold text-foreground">在线脚本代码运行器</h1>
-              <p className="text-sm text-muted-foreground">安全的 JavaScript/TypeScript/PHP 脚本执行环境</p>
             </div>
           </div>
         </div>
