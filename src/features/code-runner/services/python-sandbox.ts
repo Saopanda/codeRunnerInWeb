@@ -1,5 +1,13 @@
-import { useCodeRunnerStore, type CodeOutput, type SandboxConfig } from '../stores/code-runner-store'
-import { getPyodideConfig, preloadPyodideResources, checkPyodideResources } from './pyodide-loader'
+import {
+  useCodeRunnerStore,
+  type CodeOutput,
+  type SandboxConfig,
+} from '../stores/code-runner-store'
+import {
+  getPyodideConfig,
+  preloadPyodideResources,
+  checkPyodideResources,
+} from './pyodide-loader'
 
 export interface PythonSandboxConfig extends SandboxConfig {
   pythonVersion: string
@@ -24,10 +32,27 @@ export class PythonSandboxManager {
   // Python安全限制在 Worker 内实现
 
   private readonly PYTHON_ALLOWED_PACKAGES = [
-    'numpy', 'pandas', 'matplotlib', 'scipy', 'sklearn', 'seaborn',
-    'math', 'random', 'datetime', 'json', 're', 'collections', 
-    'itertools', 'functools', 'operator', 'string', 'decimal', 
-    'fractions', 'statistics', 'plotly', 'requests'
+    'numpy',
+    'pandas',
+    'matplotlib',
+    'scipy',
+    'sklearn',
+    'seaborn',
+    'math',
+    'random',
+    'datetime',
+    'json',
+    're',
+    'collections',
+    'itertools',
+    'functools',
+    'operator',
+    'string',
+    'decimal',
+    'fractions',
+    'statistics',
+    'plotly',
+    'requests',
   ]
 
   // 科学计算包列表（用于未来扩展）
@@ -43,18 +68,30 @@ export class PythonSandboxManager {
     // 检查Pyodide资源可用性
     const resourcesAvailable = await checkPyodideResources()
     if (!resourcesAvailable) {
-      this.addOutput({ type: 'error', message: 'Pyodide资源不可用，请检查网络连接或本地资源', source: 'error' })
+      this.addOutput({
+        type: 'error',
+        message: 'Pyodide资源不可用，请检查网络连接或本地资源',
+        source: 'error',
+      })
       throw new Error('Pyodide资源不可用')
     }
 
     // 预加载Pyodide资源
     await preloadPyodideResources()
 
-    this.addOutput({ type: 'info', message: '正在初始化 Python 环境...', source: 'system' })
+    this.addOutput({
+      type: 'info',
+      message: '正在初始化 Python 环境...',
+      source: 'system',
+    })
 
     // 创建 Worker 承载 Pyodide
-    this.worker = new Worker(new URL('./python-worker.ts', import.meta.url), { type: 'module' })
-    this.readyPromise = new Promise<void>((resolve) => { this.resolveReady = resolve })
+    this.worker = new Worker(new URL('./python-worker.ts', import.meta.url), {
+      type: 'module',
+    })
+    this.readyPromise = new Promise<void>((resolve) => {
+      this.resolveReady = resolve
+    })
 
     this.worker.onmessage = (ev: MessageEvent) => {
       const data = ev.data as { type: string; payload?: unknown } | null
@@ -62,25 +99,45 @@ export class PythonSandboxManager {
       switch (data.type) {
         case 'READY': {
           this.isInitialized = true
-          this.addOutput({ type: 'info', message: 'Python 环境初始化完成', source: 'system' })
-          this.resolveReady?.(); this.resolveReady = null
+          this.addOutput({
+            type: 'info',
+            message: 'Python 环境初始化完成',
+            source: 'system',
+          })
+          this.resolveReady?.()
+          this.resolveReady = null
           break
         }
         case 'OUTPUT': {
-          const p = data.payload as { outputType: 'log' | 'error' | 'warn' | 'info'; message: string }
-          this.addOutput({ type: p.outputType, message: p.message, source: p.outputType === 'error' ? 'error' : 'console' })
+          const p = data.payload as {
+            outputType: 'log' | 'error' | 'warn' | 'info'
+            message: string
+          }
+          this.addOutput({
+            type: p.outputType,
+            message: p.message,
+            source: p.outputType === 'error' ? 'error' : 'console',
+          })
           break
         }
         case 'RESULT': {
           const p = data.payload as { executionId: string; result: string }
           if (p.executionId === this.executionId) {
-            this.addOutput({ type: 'log', message: `返回值: ${p.result}`, source: 'console' })
+            this.addOutput({
+              type: 'log',
+              message: `返回值: ${p.result}`,
+              source: 'console',
+            })
           }
           break
         }
         case 'ERROR': {
           const p = data.payload as { executionId?: string; error: string }
-          this.addOutput({ type: 'error', message: `Python 执行错误: ${p.error}`, source: 'error' })
+          this.addOutput({
+            type: 'error',
+            message: `Python 执行错误: ${p.error}`,
+            source: 'error',
+          })
           if (!p.executionId || p.executionId === this.executionId) {
             this.cleanupExecution()
           }
@@ -89,7 +146,11 @@ export class PythonSandboxManager {
         case 'COMPLETE': {
           const p = data.payload as { executionId: string }
           if (p.executionId === this.executionId) {
-            this.addOutput({ type: 'info', message: 'Python 代码执行完成', source: 'system' })
+            this.addOutput({
+              type: 'info',
+              message: 'Python 代码执行完成',
+              source: 'system',
+            })
             this.cleanupExecution()
           }
           break
@@ -97,18 +158,37 @@ export class PythonSandboxManager {
         case 'PACKAGE_LOADED': {
           const p = data.payload as { name: string }
           this.loadedPackages.add(p.name)
-          this.addOutput({ type: 'info', message: `包加载完成: ${p.name}`, source: 'system' })
+          this.addOutput({
+            type: 'info',
+            message: `包加载完成: ${p.name}`,
+            source: 'system',
+          })
           break
         }
       }
     }
 
     this.worker.onerror = (e) => {
-      this.addOutput({ type: 'error', message: `Python Worker 错误: ${e.message}`, source: 'error' })
+      this.addOutput({
+        type: 'error',
+        message: `Python Worker 错误: ${e.message}`,
+        source: 'error',
+      })
     }
 
-      const config = getPyodideConfig()
-    this.worker.postMessage({ type: 'INIT', payload: { pyodideConfig: config as unknown as { indexURL: string; fullStdLib?: boolean; packages?: string[]; packageBaseUrl?: string }, maxRecursionDepth: 1000 } })
+    const config = getPyodideConfig()
+    this.worker.postMessage({
+      type: 'INIT',
+      payload: {
+        pyodideConfig: config as unknown as {
+          indexURL: string
+          fullStdLib?: boolean
+          packages?: string[]
+          packageBaseUrl?: string
+        },
+        maxRecursionDepth: 1000,
+      },
+    })
 
     await this.readyPromise
   }
@@ -116,7 +196,11 @@ export class PythonSandboxManager {
   // Worker 终止与重建
   private terminateWorker(): void {
     if (this.worker) {
-      try { this.worker.terminate() } catch { /* ignore */ }
+      try {
+        this.worker.terminate()
+      } catch {
+        /* ignore */
+      }
     }
     this.worker = null
     this.isInitialized = false
@@ -125,8 +209,6 @@ export class PythonSandboxManager {
   }
 
   // Worker 模式下不再使用
-   
-  
 
   public async executeCode(code: string, config: SandboxConfig): Promise<void> {
     // 防止并发执行
@@ -134,7 +216,7 @@ export class PythonSandboxManager {
       this.addOutput({
         type: 'warn',
         message: 'Python 代码正在执行中，请等待完成后再试',
-        source: 'system'
+        source: 'system',
       })
       return
     }
@@ -159,7 +241,7 @@ export class PythonSandboxManager {
         isRunning: true,
         executionId: this.executionId,
         startTime: this.startTime,
-        executionTime: null
+        executionTime: null,
       })
 
       // 清空之前的输出
@@ -167,7 +249,11 @@ export class PythonSandboxManager {
 
       // 设置执行超时（通过终止 Worker 实现真正中断）
       this.timeoutId = window.setTimeout(() => {
-        this.addOutput({ type: 'error', message: 'Python 代码执行超时', source: 'timeout' })
+        this.addOutput({
+          type: 'error',
+          message: 'Python 代码执行超时',
+          source: 'timeout',
+        })
         this.terminateWorker()
         this.cleanupExecution()
       }, config.timeout || 10000)
@@ -175,26 +261,44 @@ export class PythonSandboxManager {
       // 代码基本校验
       const cleanCode = (code || '').trim()
       if (!cleanCode) {
-        this.addOutput({ type: 'error', message: 'Python代码不能为空', source: 'error' })
+        this.addOutput({
+          type: 'error',
+          message: 'Python代码不能为空',
+          source: 'error',
+        })
         this.cleanupExecution()
         return
       }
       if (this.hasUnclosedQuotes(cleanCode)) {
-        this.addOutput({ type: 'error', message: 'Python代码语法错误：存在未闭合的引号', source: 'error' })
+        this.addOutput({
+          type: 'error',
+          message: 'Python代码语法错误：存在未闭合的引号',
+          source: 'error',
+        })
         this.cleanupExecution()
         return
       }
 
-      this.addOutput({ type: 'info', message: '正在执行 Python 代码...', source: 'system' })
+      this.addOutput({
+        type: 'info',
+        message: '正在执行 Python 代码...',
+        source: 'system',
+      })
 
       // 将执行请求发送到 Worker（Worker 内部使用 runPythonAsync）
-      this.worker?.postMessage({ type: 'EXECUTE', payload: { executionId: this.executionId, code: cleanCode, timeoutMs: config.timeout || 10000 } })
-
+      this.worker?.postMessage({
+        type: 'EXECUTE',
+        payload: {
+          executionId: this.executionId,
+          code: cleanCode,
+          timeoutMs: config.timeout || 10000,
+        },
+      })
     } catch (error) {
       this.addOutput({
         type: 'error',
         message: `Python 执行错误: ${this.formatPythonError(error)}`,
-        source: 'error'
+        source: 'error',
       })
       this.cleanupExecution()
       throw error
@@ -204,17 +308,17 @@ export class PythonSandboxManager {
   }
 
   // Worker 模式下不再使用
-   
-  
 
-  private formatPythonOutput(value: any): string { // eslint-disable-line @typescript-eslint/no-explicit-any
+  private formatPythonOutput(value: any): string {
+    // eslint-disable-line @typescript-eslint/no-explicit-any
     try {
       if (value === null) return 'None'
       if (value === undefined) return 'undefined'
       if (typeof value === 'string') return `"${value}"`
       if (typeof value === 'number') return value.toString()
       if (typeof value === 'boolean') return value ? 'True' : 'False'
-      if (Array.isArray(value)) return `[${value.map(v => this.formatPythonOutput(v)).join(', ')}]`
+      if (Array.isArray(value))
+        return `[${value.map((v) => this.formatPythonOutput(v)).join(', ')}]`
       if (typeof value === 'object') {
         return JSON.stringify(value, null, 2)
       }
@@ -238,7 +342,10 @@ export class PythonSandboxManager {
         const char = line[j]
 
         if (inTripleQuote) {
-          if (line.substring(j, j + 3) === '"""' || line.substring(j, j + 3) === "'''") {
+          if (
+            line.substring(j, j + 3) === '"""' ||
+            line.substring(j, j + 3) === "'''"
+          ) {
             inTripleQuote = false
             j += 3
           } else {
@@ -247,13 +354,23 @@ export class PythonSandboxManager {
           continue
         }
 
-        if (char === '"' && j + 2 < line.length && line[j + 1] === '"' && line[j + 2] === '"') {
+        if (
+          char === '"' &&
+          j + 2 < line.length &&
+          line[j + 1] === '"' &&
+          line[j + 2] === '"'
+        ) {
           inTripleQuote = true
           j += 3
           continue
         }
 
-        if (char === "'" && j + 2 < line.length && line[j + 1] === "'" && line[j + 2] === "'") {
+        if (
+          char === "'" &&
+          j + 2 < line.length &&
+          line[j + 1] === "'" &&
+          line[j + 2] === "'"
+        ) {
           inTripleQuote = true
           j += 3
           continue
@@ -278,34 +395,42 @@ export class PythonSandboxManager {
     return inSingleQuote || inDoubleQuote || inTripleQuote
   }
 
-  private formatPythonError(error: any): string { // eslint-disable-line @typescript-eslint/no-explicit-any
+  private formatPythonError(error: any): string {
+    // eslint-disable-line @typescript-eslint/no-explicit-any
     if (error instanceof Error) {
       // 尝试解析Python错误信息
       const message = error.message
-      
+
       // 检查是否是Python语法错误
       if (message.includes('SyntaxError')) {
         return this.formatSyntaxError(message)
       }
-      
+
       // 检查是否是Python运行时错误
-      if (message.includes('NameError') || message.includes('TypeError') || 
-          message.includes('ValueError') || message.includes('AttributeError')) {
+      if (
+        message.includes('NameError') ||
+        message.includes('TypeError') ||
+        message.includes('ValueError') ||
+        message.includes('AttributeError')
+      ) {
         return this.formatRuntimeError(message)
       }
-      
+
       // 检查是否是导入错误
-      if (message.includes('ImportError') || message.includes('ModuleNotFoundError')) {
+      if (
+        message.includes('ImportError') ||
+        message.includes('ModuleNotFoundError')
+      ) {
         return this.formatImportError(message)
       }
-      
+
       return message
     }
-    
+
     if (typeof error === 'string') {
       return error
     }
-    
+
     return '未知错误'
   }
 
@@ -316,7 +441,7 @@ export class PythonSandboxManager {
       const errorLine = lines[0]
       const codeLine = lines[1] || ''
       const pointer = lines[2] || ''
-      
+
       return `语法错误: ${errorLine}\n代码: ${codeLine}\n位置: ${pointer}`
     }
     return `语法错误: ${message}`
@@ -329,7 +454,7 @@ export class PythonSandboxManager {
       const errorType = lines[0].split(':')[0]
       const errorMessage = lines[0].split(':').slice(1).join(':').trim()
       const traceback = lines.slice(1).join('\n')
-      
+
       return `${errorType}: ${errorMessage}\n${traceback}`
     }
     return `运行时错误: ${message}`
@@ -347,8 +472,6 @@ export class PythonSandboxManager {
   }
 
   // Worker 模式下不再使用
-   
-  
 
   private cleanupExecution(): void {
     // 清除超时
@@ -368,7 +491,7 @@ export class PythonSandboxManager {
       isPaused: false,
       executionId: null,
       startTime: null,
-      timeoutId: null
+      timeoutId: null,
     })
   }
 
@@ -381,7 +504,11 @@ export class PythonSandboxManager {
     if (this.executionId) {
       this.terminateWorker()
       this.cleanupExecution()
-      this.addOutput({ type: 'info', message: `Python 执行已停止 (ID: ${this.executionId})`, source: 'system' })
+      this.addOutput({
+        type: 'info',
+        message: `Python 执行已停止 (ID: ${this.executionId})`,
+        source: 'system',
+      })
     }
   }
 
@@ -399,7 +526,7 @@ export class PythonSandboxManager {
       isReady: this.isInitialized,
       executionId: this.executionId,
       startTime: this.startTime,
-      hasPyodide: this.pyodide !== null
+      hasPyodide: this.pyodide !== null,
     }
   }
 
@@ -411,11 +538,22 @@ export class PythonSandboxManager {
       throw new Error('Python环境未初始化')
     }
     try {
-      this.addOutput({ type: 'info', message: `正在加载包: ${packageName}`, source: 'system' })
-      this.worker.postMessage({ type: 'LOAD_PACKAGE', payload: { name: packageName } })
+      this.addOutput({
+        type: 'info',
+        message: `正在加载包: ${packageName}`,
+        source: 'system',
+      })
+      this.worker.postMessage({
+        type: 'LOAD_PACKAGE',
+        payload: { name: packageName },
+      })
       return true
     } catch (error) {
-      this.addOutput({ type: 'error', message: `包加载失败: ${packageName} - ${error instanceof Error ? error.message : '未知错误'}`, source: 'error' })
+      this.addOutput({
+        type: 'error',
+        message: `包加载失败: ${packageName} - ${error instanceof Error ? error.message : '未知错误'}`,
+        source: 'error',
+      })
       return false
     }
   }
@@ -442,7 +580,7 @@ export class PythonSandboxManager {
       this.addOutput({
         type: 'error',
         message: `包 '${packageName}' 不在允许的包列表中`,
-        source: 'error'
+        source: 'error',
       })
       return false
     }
@@ -455,7 +593,7 @@ export class PythonSandboxManager {
       this.addOutput({
         type: 'info',
         message: `正在加载 ${packageName}...`,
-        source: 'system'
+        source: 'system',
       })
 
       await this.pyodide.loadPackage(packageName)
@@ -464,7 +602,7 @@ export class PythonSandboxManager {
       this.addOutput({
         type: 'info',
         message: `${packageName} 加载完成`,
-        source: 'system'
+        source: 'system',
       })
 
       return true
@@ -472,7 +610,7 @@ export class PythonSandboxManager {
       this.addOutput({
         type: 'error',
         message: `${packageName} 加载失败: ${error instanceof Error ? error.message : '未知错误'}`,
-        source: 'error'
+        source: 'error',
       })
       return false
     }

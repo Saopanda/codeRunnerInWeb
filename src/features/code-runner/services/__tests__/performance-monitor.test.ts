@@ -11,12 +11,12 @@ describe('PerformanceMonitor', () => {
   describe('startTiming', () => {
     it('should measure timing correctly', async () => {
       const stopTiming = monitor.startTiming('test-operation')
-      
+
       // 模拟一些异步操作
-      await new Promise(resolve => setTimeout(resolve, 10))
-      
+      await new Promise((resolve) => setTimeout(resolve, 10))
+
       stopTiming()
-      
+
       const metrics = monitor.getMetrics()
       expect(metrics).toHaveLength(1)
       expect(metrics[0].name).toBe('test-operation')
@@ -27,7 +27,7 @@ describe('PerformanceMonitor', () => {
     it('should support different metric types', () => {
       const stopTiming = monitor.startTiming('compilation', 'compilation')
       stopTiming()
-      
+
       const metrics = monitor.getMetrics()
       expect(metrics[0].type).toBe('compilation')
     })
@@ -40,9 +40,9 @@ describe('PerformanceMonitor', () => {
         duration: 100,
         timestamp: Date.now(),
         type: 'execution',
-        metadata: { customData: 'test' }
+        metadata: { customData: 'test' },
       })
-      
+
       const metrics = monitor.getMetrics()
       expect(metrics).toHaveLength(1)
       expect(metrics[0].name).toBe('custom-metric')
@@ -52,17 +52,17 @@ describe('PerformanceMonitor', () => {
 
     it('should limit metrics to max size', () => {
       const monitor = new PerformanceMonitor()
-      
+
       // 添加超过最大数量的指标
       for (let i = 0; i < 150; i++) {
         monitor.recordMetric({
           name: `metric-${i}`,
           duration: i,
           timestamp: Date.now(),
-          type: 'timing'
+          type: 'timing',
         })
       }
-      
+
       const metrics = monitor.getMetrics()
       expect(metrics).toHaveLength(100) // 应该限制在100个
       expect(metrics[0].name).toBe('metric-50') // 最早的50个应该被移除
@@ -75,29 +75,31 @@ describe('PerformanceMonitor', () => {
         name: 'compilation-1',
         duration: 50,
         timestamp: Date.now(),
-        type: 'compilation'
+        type: 'compilation',
       })
-      
+
       monitor.recordMetric({
         name: 'execution-1',
         duration: 100,
         timestamp: Date.now(),
-        type: 'execution'
+        type: 'execution',
       })
-      
+
       monitor.recordMetric({
         name: 'compilation-2',
         duration: 75,
         timestamp: Date.now(),
-        type: 'compilation'
+        type: 'compilation',
       })
-      
+
       const compilationMetrics = monitor.getMetricsByType('compilation')
       const executionMetrics = monitor.getMetricsByType('execution')
-      
+
       expect(compilationMetrics).toHaveLength(2)
       expect(executionMetrics).toHaveLength(1)
-      expect(compilationMetrics.every(m => m.type === 'compilation')).toBe(true)
+      expect(compilationMetrics.every((m) => m.type === 'compilation')).toBe(
+        true
+      )
     })
   })
 
@@ -107,23 +109,23 @@ describe('PerformanceMonitor', () => {
         name: 'test-operation',
         duration: 100,
         timestamp: Date.now(),
-        type: 'timing'
+        type: 'timing',
       })
-      
+
       monitor.recordMetric({
         name: 'test-operation',
         duration: 200,
         timestamp: Date.now(),
-        type: 'timing'
+        type: 'timing',
       })
-      
+
       monitor.recordMetric({
         name: 'test-operation',
         duration: 300,
         timestamp: Date.now(),
-        type: 'timing'
+        type: 'timing',
       })
-      
+
       const average = monitor.getAverageTime('test-operation')
       expect(average).toBe(200) // (100 + 200 + 300) / 3
     })
@@ -141,26 +143,26 @@ describe('PerformanceMonitor', () => {
         name: 'typescript-compile',
         duration: 50,
         timestamp: Date.now(),
-        type: 'compilation'
+        type: 'compilation',
       })
-      
+
       monitor.recordMetric({
         name: 'code-execution',
         duration: 100,
         timestamp: Date.now(),
-        type: 'execution'
+        type: 'execution',
       })
-      
+
       monitor.recordMetric({
         name: 'memory-usage',
         duration: 0,
         timestamp: Date.now(),
         type: 'memory',
-        metadata: { memoryUsage: 0.5 }
+        metadata: { memoryUsage: 0.5 },
       })
-      
+
       const report = monitor.getPerformanceReport()
-      
+
       expect(report.compilationTime).toBe(50)
       expect(report.executionTime).toBe(100)
       expect(report.memoryUsage).toBe(0.5)
@@ -175,13 +177,13 @@ describe('PerformanceMonitor', () => {
         name: 'test',
         duration: 100,
         timestamp: Date.now(),
-        type: 'timing'
+        type: 'timing',
       })
-      
+
       expect(monitor.getMetrics()).toHaveLength(1)
-      
+
       monitor.clearMetrics()
-      
+
       expect(monitor.getMetrics()).toHaveLength(0)
     })
   })
@@ -190,41 +192,44 @@ describe('PerformanceMonitor', () => {
     it('should notify listeners when metrics are recorded', () => {
       const listener = vi.fn()
       const removeListener = monitor.addListener(listener)
-      
+
       monitor.recordMetric({
         name: 'test',
         duration: 100,
         timestamp: Date.now(),
-        type: 'timing'
+        type: 'timing',
       })
-      
+
       expect(listener).toHaveBeenCalledTimes(1)
       expect(listener).toHaveBeenCalledWith(
         expect.objectContaining({
           name: 'test',
           duration: 100,
-          type: 'timing'
+          type: 'timing',
         })
       )
-      
+
       removeListener()
-      
+
       monitor.recordMetric({
         name: 'test2',
         duration: 200,
         timestamp: Date.now(),
-        type: 'timing'
+        type: 'timing',
       })
-      
+
       expect(listener).toHaveBeenCalledTimes(1) // 不应该再被调用
     })
   })
 
   describe('execution monitoring', () => {
     it('should monitor code execution', () => {
-      const stopMonitoring = monitor.startExecutionMonitoring('console.log("test")', 'javascript')
+      const stopMonitoring = monitor.startExecutionMonitoring(
+        'console.log("test")',
+        'javascript'
+      )
       stopMonitoring()
-      
+
       const metrics = monitor.getMetricsByType('execution')
       expect(metrics).toHaveLength(1)
       expect(metrics[0].metadata?.codeLength).toBe(19)
@@ -235,9 +240,12 @@ describe('PerformanceMonitor', () => {
   describe('compilation monitoring', () => {
     it('should monitor compilation', () => {
       const testCode = 'const x: string = "test"'
-      const stopMonitoring = monitor.startCompilationMonitoring(testCode, 'typescript')
+      const stopMonitoring = monitor.startCompilationMonitoring(
+        testCode,
+        'typescript'
+      )
       stopMonitoring()
-      
+
       const metrics = monitor.getMetricsByType('compilation')
       expect(metrics).toHaveLength(1)
       expect(metrics[0].metadata?.codeLength).toBe(testCode.length)

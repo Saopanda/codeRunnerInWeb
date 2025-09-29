@@ -36,20 +36,33 @@ interface LoadPackageMessage {
   payload: { name: string }
 }
 
-interface StopMessage { type: 'STOP' }
+interface StopMessage {
+  type: 'STOP'
+}
 
 type InMessage = InitMessage | ExecuteMessage | LoadPackageMessage | StopMessage
 
 type OutMessage =
   | { type: 'READY' }
-  | { type: 'OUTPUT'; payload: { outputType: 'log' | 'error' | 'warn' | 'info'; message: string } }
+  | {
+      type: 'OUTPUT'
+      payload: {
+        outputType: 'log' | 'error' | 'warn' | 'info'
+        message: string
+      }
+    }
   | { type: 'RESULT'; payload: { executionId: string; result: string } }
   | { type: 'ERROR'; payload: { executionId?: string; error: string } }
   | { type: 'COMPLETE'; payload: { executionId: string } }
   | { type: 'PACKAGE_LOADED'; payload: { name: string } }
 
 interface PyodideLike {
-  globals: { set(name: string, fn: (text: string, outputType: 'log' | 'error' | 'warn' | 'info') => void): void }
+  globals: {
+    set(
+      name: string,
+      fn: (text: string, outputType: 'log' | 'error' | 'warn' | 'info') => void
+    ): void
+  }
   runPythonAsync: (code: string) => Promise<unknown>
   runPython: (code: string) => unknown
   loadPackage: (name: string) => Promise<void>
@@ -59,19 +72,24 @@ interface PyodideLike {
 let pyodide: PyodideLike | null = null
 let isReady = false
 // currentExecutionId 目前仅用于占位，可在扩展中用于取消/追踪
-/* @__PURE__ */ let currentExecutionId: string | null = null; void currentExecutionId
+/* @__PURE__ */ let currentExecutionId: string | null = null
+void currentExecutionId
 let terminated = false
 
 function post(message: OutMessage) {
   postMessage(message)
 }
 
-async function initializePyodide(config: InitMessage['payload']): Promise<void> {
+async function initializePyodide(
+  config: InitMessage['payload']
+): Promise<void> {
   if (isReady) return
 
   try {
     const { loadPyodide } = await import('pyodide')
-    pyodide = (await loadPyodide(config.pyodideConfig)) as unknown as PyodideLike
+    pyodide = (await loadPyodide(
+      config.pyodideConfig
+    )) as unknown as PyodideLike
 
     // 安全限制：不屏蔽 sys/os；屏蔽高风险模块与 js 桥
     pyodide.runPython(`
@@ -101,9 +119,15 @@ if ${String(Number(!!config.maxRecursionDepth))}:
 `)
 
     // 输出重定向 + print 重写
-    pyodide.globals.set('_send_output', (text: string, outputType: 'log' | 'error' | 'warn' | 'info') => {
-      post({ type: 'OUTPUT', payload: { outputType, message: String(text).trim() } })
-    })
+    pyodide.globals.set(
+      '_send_output',
+      (text: string, outputType: 'log' | 'error' | 'warn' | 'info') => {
+        post({
+          type: 'OUTPUT',
+          payload: { outputType, message: String(text).trim() },
+        })
+      }
+    )
 
     pyodide.runPython(`
 import sys
@@ -155,13 +179,23 @@ warnings.showwarning = _ui_showwarning
     isReady = true
     post({ type: 'READY' })
   } catch (e) {
-    post({ type: 'ERROR', payload: { error: e instanceof Error ? e.message : String(e) } })
+    post({
+      type: 'ERROR',
+      payload: { error: e instanceof Error ? e.message : String(e) },
+    })
   }
 }
 
-async function executeCode(executionId: string, code: string, timeoutMs?: number): Promise<void> {
+async function executeCode(
+  executionId: string,
+  code: string,
+  timeoutMs?: number
+): Promise<void> {
   if (!isReady || !pyodide) {
-    post({ type: 'ERROR', payload: { executionId, error: 'Python 环境未初始化' } })
+    post({
+      type: 'ERROR',
+      payload: { executionId, error: 'Python 环境未初始化' },
+    })
     return
   }
 
@@ -174,7 +208,9 @@ async function executeCode(executionId: string, code: string, timeoutMs?: number
     if (timeoutMs && timeoutMs > 0) {
       result = await Promise.race([
         runPromise,
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Python代码执行超时')), timeoutMs))
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Python代码执行超时')), timeoutMs)
+        ),
       ])
     } else {
       result = await runPromise
@@ -195,7 +231,13 @@ async function executeCode(executionId: string, code: string, timeoutMs?: number
     post({ type: 'COMPLETE', payload: { executionId } })
   } catch (e) {
     if (terminated) return
-    post({ type: 'ERROR', payload: { executionId, error: e instanceof Error ? e.message : String(e) } })
+    post({
+      type: 'ERROR',
+      payload: {
+        executionId,
+        error: e instanceof Error ? e.message : String(e),
+      },
+    })
   } finally {
     currentExecutionId = null
   }
@@ -210,7 +252,11 @@ self.onmessage = async (ev: MessageEvent<InMessage>) => {
       await initializePyodide(msg.payload)
       break
     case 'EXECUTE':
-      await executeCode(msg.payload.executionId, msg.payload.code, msg.payload.timeoutMs)
+      await executeCode(
+        msg.payload.executionId,
+        msg.payload.code,
+        msg.payload.timeoutMs
+      )
       break
     case 'LOAD_PACKAGE':
       try {
@@ -218,7 +264,10 @@ self.onmessage = async (ev: MessageEvent<InMessage>) => {
         await pyodide.loadPackage(msg.payload.name)
         post({ type: 'PACKAGE_LOADED', payload: { name: msg.payload.name } })
       } catch (e) {
-        post({ type: 'ERROR', payload: { error: e instanceof Error ? e.message : String(e) } })
+        post({
+          type: 'ERROR',
+          payload: { error: e instanceof Error ? e.message : String(e) },
+        })
       }
       break
     case 'STOP':
@@ -230,5 +279,3 @@ self.onmessage = async (ev: MessageEvent<InMessage>) => {
 }
 
 export {}
-
-

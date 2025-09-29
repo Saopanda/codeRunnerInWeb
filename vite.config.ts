@@ -36,12 +36,12 @@ export default defineConfig({
             return 'pyodide/[name][extname]'
           }
           return 'assets/[name]-[hash][extname]'
-        }
-      }
-    }
+        },
+      },
+    },
   },
   worker: {
-    format: 'es'
+    format: 'es',
   },
   optimizeDeps: {
     exclude: ['php-wasm', 'pyodide'],

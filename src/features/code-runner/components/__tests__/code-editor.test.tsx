@@ -1,24 +1,32 @@
 // import React from 'react'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { CodeEditor } from '../code-editor'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { useCodeRunnerStore } from '../../stores/code-runner-store'
+import { CodeEditor } from '../code-editor'
 
 // Mock the store
 vi.mock('../../stores/code-runner-store', () => ({
-  useCodeRunnerStore: vi.fn()
+  useCodeRunnerStore: vi.fn(),
 }))
 
 // Mock the theme provider
 vi.mock('@/context/theme-provider', () => ({
   useTheme: () => ({
-    resolvedTheme: 'light'
-  })
+    resolvedTheme: 'light',
+  }),
 }))
 
 // Mock Monaco Editor
 vi.mock('@monaco-editor/react', () => ({
-  default: ({ onChange, onMount, value }: { onChange?: (value: string) => void; onMount?: (editor: unknown) => void; value: string }) => {
+  default: ({
+    onChange,
+    onMount,
+    value,
+  }: {
+    onChange?: (value: string) => void
+    onMount?: (editor: unknown) => void
+    value: string
+  }) => {
     const handleChange = (e: { target: { value: string } }) => {
       if (onChange) {
         onChange(e.target.value)
@@ -36,7 +44,7 @@ vi.mock('@monaco-editor/react', () => ({
           dispose: () => {},
           updateOptions: (_options: unknown) => {
             // Mock updateOptions
-          }
+          },
         })
       }
     }
@@ -47,17 +55,25 @@ vi.mock('@monaco-editor/react', () => ({
     }, 0)
 
     return (
-      <div data-testid="monaco-editor">
+      <div data-testid='monaco-editor'>
         <textarea
-          data-testid="editor-textarea"
+          data-testid='editor-textarea'
           value={value}
           onChange={handleChange}
-          placeholder="Enter code here..."
+          placeholder='Enter code here...'
         />
       </div>
     )
   },
-  Editor: ({ onChange, onMount, value }: { onChange?: (value: string) => void; onMount?: (editor: unknown) => void; value: string }) => {
+  Editor: ({
+    onChange,
+    onMount,
+    value,
+  }: {
+    onChange?: (value: string) => void
+    onMount?: (editor: unknown) => void
+    value: string
+  }) => {
     const handleChange = (e: { target: { value: string } }) => {
       if (onChange) {
         onChange(e.target.value)
@@ -75,7 +91,7 @@ vi.mock('@monaco-editor/react', () => ({
           dispose: () => {},
           updateOptions: (_options: unknown) => {
             // Mock updateOptions
-          }
+          },
         })
       }
     }
@@ -86,16 +102,16 @@ vi.mock('@monaco-editor/react', () => ({
     }, 0)
 
     return (
-      <div data-testid="monaco-editor">
+      <div data-testid='monaco-editor'>
         <textarea
-          data-testid="editor-textarea"
+          data-testid='editor-textarea'
           value={value}
           onChange={handleChange}
-          placeholder="Enter code here..."
+          placeholder='Enter code here...'
         />
       </div>
     )
-  }
+  },
 }))
 
 describe('CodeEditor', () => {
@@ -107,12 +123,14 @@ describe('CodeEditor', () => {
     const mockStore = {
       code: 'console.log("Hello World");',
       setCode: vi.fn(),
-      language: 'javascript' as const
+      language: 'javascript' as const,
     }
-    vi.mocked(useCodeRunnerStore).mockReturnValue(mockStore as unknown as ReturnType<typeof useCodeRunnerStore>)
+    vi.mocked(useCodeRunnerStore).mockReturnValue(
+      mockStore as unknown as ReturnType<typeof useCodeRunnerStore>
+    )
 
     render(<CodeEditor />)
-    
+
     expect(screen.getByTestId('monaco-editor')).toBeInTheDocument()
   })
 
@@ -121,12 +139,14 @@ describe('CodeEditor', () => {
     const mockStore = {
       code,
       setCode: vi.fn(),
-      language: 'javascript' as const
+      language: 'javascript' as const,
     }
-    vi.mocked(useCodeRunnerStore).mockReturnValue(mockStore as unknown as ReturnType<typeof useCodeRunnerStore>)
-    
+    vi.mocked(useCodeRunnerStore).mockReturnValue(
+      mockStore as unknown as ReturnType<typeof useCodeRunnerStore>
+    )
+
     render(<CodeEditor />)
-    
+
     expect(screen.getByTestId('editor-textarea')).toHaveValue(code)
   })
 
@@ -135,15 +155,17 @@ describe('CodeEditor', () => {
     const mockStore = {
       code: 'console.log("Hello World");',
       setCode: mockSetCode,
-      language: 'javascript' as const
+      language: 'javascript' as const,
     }
-    vi.mocked(useCodeRunnerStore).mockReturnValue(mockStore as unknown as ReturnType<typeof useCodeRunnerStore>)
-    
+    vi.mocked(useCodeRunnerStore).mockReturnValue(
+      mockStore as unknown as ReturnType<typeof useCodeRunnerStore>
+    )
+
     render(<CodeEditor />)
-    
+
     const textarea = screen.getByTestId('editor-textarea')
     fireEvent.change(textarea, { target: { value: 'console.log("Updated");' } })
-    
+
     expect(mockSetCode).toHaveBeenCalledWith('console.log("Updated");')
   })
 
@@ -151,12 +173,14 @@ describe('CodeEditor', () => {
     const mockStore = {
       code: 'console.log("Hello World");',
       setCode: vi.fn(),
-      language: 'javascript' as const
+      language: 'javascript' as const,
     }
-    vi.mocked(useCodeRunnerStore).mockReturnValue(mockStore as unknown as ReturnType<typeof useCodeRunnerStore>)
-    
+    vi.mocked(useCodeRunnerStore).mockReturnValue(
+      mockStore as unknown as ReturnType<typeof useCodeRunnerStore>
+    )
+
     render(<CodeEditor />)
-    
+
     await waitFor(() => {
       expect(screen.getByTestId('monaco-editor')).toBeInTheDocument()
     })
@@ -166,12 +190,14 @@ describe('CodeEditor', () => {
     const mockStore = {
       code: 'const x = 1;',
       setCode: vi.fn(),
-      language: 'typescript' as const
+      language: 'typescript' as const,
     }
-    vi.mocked(useCodeRunnerStore).mockReturnValue(mockStore as unknown as ReturnType<typeof useCodeRunnerStore>)
-    
+    vi.mocked(useCodeRunnerStore).mockReturnValue(
+      mockStore as unknown as ReturnType<typeof useCodeRunnerStore>
+    )
+
     render(<CodeEditor />)
-    
+
     expect(screen.getByTestId('monaco-editor')).toBeInTheDocument()
   })
 
@@ -179,12 +205,14 @@ describe('CodeEditor', () => {
     const mockStore = {
       code: '<?php echo "Hello World"; ?>',
       setCode: vi.fn(),
-      language: 'php' as const
+      language: 'php' as const,
     }
-    vi.mocked(useCodeRunnerStore).mockReturnValue(mockStore as unknown as ReturnType<typeof useCodeRunnerStore>)
-    
+    vi.mocked(useCodeRunnerStore).mockReturnValue(
+      mockStore as unknown as ReturnType<typeof useCodeRunnerStore>
+    )
+
     render(<CodeEditor />)
-    
+
     expect(screen.getByTestId('monaco-editor')).toBeInTheDocument()
   })
 
@@ -192,12 +220,14 @@ describe('CodeEditor', () => {
     const mockStore = {
       code: '',
       setCode: vi.fn(),
-      language: 'javascript' as const
+      language: 'javascript' as const,
     }
-    vi.mocked(useCodeRunnerStore).mockReturnValue(mockStore as unknown as ReturnType<typeof useCodeRunnerStore>)
-    
+    vi.mocked(useCodeRunnerStore).mockReturnValue(
+      mockStore as unknown as ReturnType<typeof useCodeRunnerStore>
+    )
+
     render(<CodeEditor />)
-    
+
     expect(screen.getByTestId('editor-textarea')).toHaveValue('')
   })
 
@@ -206,12 +236,14 @@ describe('CodeEditor', () => {
     const mockStore = {
       code,
       setCode: vi.fn(),
-      language: 'javascript' as const
+      language: 'javascript' as const,
     }
-    vi.mocked(useCodeRunnerStore).mockReturnValue(mockStore as unknown as ReturnType<typeof useCodeRunnerStore>)
-    
+    vi.mocked(useCodeRunnerStore).mockReturnValue(
+      mockStore as unknown as ReturnType<typeof useCodeRunnerStore>
+    )
+
     render(<CodeEditor />)
-    
+
     expect(screen.getByTestId('editor-textarea')).toHaveValue(code)
   })
 
@@ -223,12 +255,14 @@ describe('CodeEditor', () => {
     const mockStore = {
       code,
       setCode: vi.fn(),
-      language: 'javascript' as const
+      language: 'javascript' as const,
     }
-    vi.mocked(useCodeRunnerStore).mockReturnValue(mockStore as unknown as ReturnType<typeof useCodeRunnerStore>)
-    
+    vi.mocked(useCodeRunnerStore).mockReturnValue(
+      mockStore as unknown as ReturnType<typeof useCodeRunnerStore>
+    )
+
     render(<CodeEditor />)
-    
+
     expect(screen.getByTestId('editor-textarea')).toHaveValue(code)
   })
 
@@ -237,12 +271,14 @@ describe('CodeEditor', () => {
     const mockStore = {
       code,
       setCode: vi.fn(),
-      language: 'typescript' as const
+      language: 'typescript' as const,
     }
-    vi.mocked(useCodeRunnerStore).mockReturnValue(mockStore as unknown as ReturnType<typeof useCodeRunnerStore>)
-    
+    vi.mocked(useCodeRunnerStore).mockReturnValue(
+      mockStore as unknown as ReturnType<typeof useCodeRunnerStore>
+    )
+
     render(<CodeEditor />)
-    
+
     expect(screen.getByTestId('editor-textarea')).toHaveValue(code)
   })
 
@@ -251,12 +287,14 @@ describe('CodeEditor', () => {
     const mockStore = {
       code,
       setCode: vi.fn(),
-      language: 'php' as const
+      language: 'php' as const,
     }
-    vi.mocked(useCodeRunnerStore).mockReturnValue(mockStore as unknown as ReturnType<typeof useCodeRunnerStore>)
-    
+    vi.mocked(useCodeRunnerStore).mockReturnValue(
+      mockStore as unknown as ReturnType<typeof useCodeRunnerStore>
+    )
+
     render(<CodeEditor />)
-    
+
     expect(screen.getByTestId('editor-textarea')).toHaveValue(code)
   })
 
@@ -266,12 +304,14 @@ console.log("Hello World"); // Another comment`
     const mockStore = {
       code,
       setCode: vi.fn(),
-      language: 'javascript' as const
+      language: 'javascript' as const,
     }
-    vi.mocked(useCodeRunnerStore).mockReturnValue(mockStore as unknown as ReturnType<typeof useCodeRunnerStore>)
-    
+    vi.mocked(useCodeRunnerStore).mockReturnValue(
+      mockStore as unknown as ReturnType<typeof useCodeRunnerStore>
+    )
+
     render(<CodeEditor />)
-    
+
     expect(screen.getByTestId('editor-textarea')).toHaveValue(code)
   })
 
@@ -280,12 +320,14 @@ console.log("Hello World"); // Another comment`
     const mockStore = {
       code,
       setCode: vi.fn(),
-      language: 'javascript' as const
+      language: 'javascript' as const,
     }
-    vi.mocked(useCodeRunnerStore).mockReturnValue(mockStore as unknown as ReturnType<typeof useCodeRunnerStore>)
-    
+    vi.mocked(useCodeRunnerStore).mockReturnValue(
+      mockStore as unknown as ReturnType<typeof useCodeRunnerStore>
+    )
+
     render(<CodeEditor />)
-    
+
     expect(screen.getByTestId('editor-textarea')).toHaveValue(code)
   })
 
@@ -294,12 +336,14 @@ console.log("Hello World"); // Another comment`
     const mockStore = {
       code,
       setCode: vi.fn(),
-      language: 'javascript' as const
+      language: 'javascript' as const,
     }
-    vi.mocked(useCodeRunnerStore).mockReturnValue(mockStore as unknown as ReturnType<typeof useCodeRunnerStore>)
-    
+    vi.mocked(useCodeRunnerStore).mockReturnValue(
+      mockStore as unknown as ReturnType<typeof useCodeRunnerStore>
+    )
+
     render(<CodeEditor />)
-    
+
     expect(screen.getByTestId('editor-textarea')).toHaveValue(code)
   })
 })

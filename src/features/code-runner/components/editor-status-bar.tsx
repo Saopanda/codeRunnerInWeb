@@ -1,5 +1,5 @@
-import { useCodeRunnerStore } from '../stores/code-runner-store'
 import { Code } from 'lucide-react'
+import { useCodeRunnerStore } from '../stores/code-runner-store'
 
 export function EditorStatusBar() {
   const { code, language } = useCodeRunnerStore()
@@ -23,18 +23,18 @@ export function EditorStatusBar() {
   const wordCount = code.trim() ? code.trim().split(/\s+/).length : 0
 
   return (
-    <div className="flex items-center justify-between px-3 py-2 bg-muted/30 border-b text-xs text-muted-foreground">
-      <div className="flex items-center space-x-4">
-        <span className="flex items-center space-x-1">
-          <Code className="h-3 w-3" />
+    <div className='bg-muted/30 text-muted-foreground flex items-center justify-between border-b px-3 py-2 text-xs'>
+      <div className='flex items-center space-x-4'>
+        <span className='flex items-center space-x-1'>
+          <Code className='h-3 w-3' />
           <span>{getLanguageDisplayName()}</span>
         </span>
         <span>{codeLength} 字符</span>
         <span>{lineCount} 行</span>
         <span>{wordCount} 词</span>
       </div>
-      
-      <div className="flex items-center space-x-4">
+
+      <div className='flex items-center space-x-4'>
         <span>编码: UTF-8</span>
         <span>缩进: 2 空格</span>
       </div>

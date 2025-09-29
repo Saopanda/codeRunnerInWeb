@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { CodeRunnerErrorBoundary } from '../error-boundary'
 
 // Mock component that throws error
@@ -11,15 +11,13 @@ const ThrowError = ({ shouldThrow }: { shouldThrow: boolean }) => {
 }
 
 // Mock console.error to avoid noise in tests
- 
+
 const originalConsoleError = console.error
 beforeEach(() => {
-   
   console.error = vi.fn()
 })
 
 afterEach(() => {
-   
   console.error = originalConsoleError
 })
 
@@ -35,7 +33,7 @@ describe('CodeRunnerErrorBoundary', () => {
           <ThrowError shouldThrow={false} />
         </CodeRunnerErrorBoundary>
       )
-      
+
       expect(screen.getByText(/No error/)).toBeInTheDocument()
     })
 
@@ -46,7 +44,7 @@ describe('CodeRunnerErrorBoundary', () => {
           <div>Child 2</div>
         </CodeRunnerErrorBoundary>
       )
-      
+
       expect(screen.getByText('Child 1')).toBeInTheDocument()
       expect(screen.getByText('Child 2')).toBeInTheDocument()
     })
@@ -59,7 +57,7 @@ describe('CodeRunnerErrorBoundary', () => {
           <ThrowError shouldThrow={true} />
         </CodeRunnerErrorBoundary>
       )
-      
+
       expect(screen.getByText(/代码运行器遇到错误/)).toBeInTheDocument()
       expect(screen.getByText('Test error')).toBeInTheDocument()
     })
@@ -70,7 +68,7 @@ describe('CodeRunnerErrorBoundary', () => {
           <ThrowError shouldThrow={true} />
         </CodeRunnerErrorBoundary>
       )
-      
+
       expect(screen.getByText('Test error')).toBeInTheDocument()
     })
 
@@ -80,8 +78,10 @@ describe('CodeRunnerErrorBoundary', () => {
           <ThrowError shouldThrow={true} />
         </CodeRunnerErrorBoundary>
       )
-      
-      expect(screen.getByRole('button', { name: /刷新页面/i })).toBeInTheDocument()
+
+      expect(
+        screen.getByRole('button', { name: /刷新页面/i })
+      ).toBeInTheDocument()
     })
   })
 
@@ -92,21 +92,21 @@ describe('CodeRunnerErrorBoundary', () => {
           <ThrowError shouldThrow={true} />
         </CodeRunnerErrorBoundary>
       )
-      
+
       // Should show error initially
       expect(screen.getByText(/代码运行器遇到错误/)).toBeInTheDocument()
-      
+
       // Click retry button
       const retryButton = screen.getByRole('button', { name: /重试/i })
       fireEvent.click(retryButton)
-      
+
       // Rerender with no error
       rerender(
         <CodeRunnerErrorBoundary>
           <ThrowError shouldThrow={false} />
         </CodeRunnerErrorBoundary>
       )
-      
+
       expect(screen.getByText(/No error/)).toBeInTheDocument()
       expect(screen.queryByText(/代码运行器遇到错误/)).not.toBeInTheDocument()
     })
@@ -115,20 +115,20 @@ describe('CodeRunnerErrorBoundary', () => {
       const mockReload = vi.fn()
       Object.defineProperty(window, 'location', {
         value: {
-          reload: mockReload
+          reload: mockReload,
         },
-        writable: true
+        writable: true,
       })
-      
+
       render(
         <CodeRunnerErrorBoundary>
           <ThrowError shouldThrow={true} />
         </CodeRunnerErrorBoundary>
       )
-      
+
       const reloadButton = screen.getByRole('button', { name: /刷新页面/i })
       fireEvent.click(reloadButton)
-      
+
       expect(mockReload).toHaveBeenCalled()
     })
   })
@@ -140,17 +140,17 @@ describe('CodeRunnerErrorBoundary', () => {
           <ThrowError shouldThrow={true} />
         </CodeRunnerErrorBoundary>
       )
-      
+
       // Should show error
       expect(screen.getByText(/代码运行器遇到错误/)).toBeInTheDocument()
-      
+
       // Change to component that doesn't throw
       rerender(
         <CodeRunnerErrorBoundary>
           <ThrowError shouldThrow={false} />
         </CodeRunnerErrorBoundary>
       )
-      
+
       // Should show normal content
       expect(screen.getByText(/No error/)).toBeInTheDocument()
       expect(screen.queryByText(/代码运行器遇到错误/)).not.toBeInTheDocument()
@@ -164,8 +164,7 @@ describe('CodeRunnerErrorBoundary', () => {
           <ThrowError shouldThrow={true} />
         </CodeRunnerErrorBoundary>
       )
-      
-       
+
       expect(console.error).toHaveBeenCalled()
     })
 
@@ -175,7 +174,7 @@ describe('CodeRunnerErrorBoundary', () => {
           <ThrowError shouldThrow={true} />
         </CodeRunnerErrorBoundary>
       )
-      
+
       expect(screen.getByText('Test error')).toBeInTheDocument()
     })
   })
@@ -187,9 +186,11 @@ describe('CodeRunnerErrorBoundary', () => {
           <ThrowError shouldThrow={true} />
         </CodeRunnerErrorBoundary>
       )
-      
+
       expect(screen.getByRole('button', { name: /重试/i })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /刷新页面/i })).toBeInTheDocument()
+      expect(
+        screen.getByRole('button', { name: /刷新页面/i })
+      ).toBeInTheDocument()
     })
 
     it('should be keyboard accessible', () => {
@@ -198,10 +199,10 @@ describe('CodeRunnerErrorBoundary', () => {
           <ThrowError shouldThrow={true} />
         </CodeRunnerErrorBoundary>
       )
-      
+
       const retryButton = screen.getByRole('button', { name: /重试/i })
       const reloadButton = screen.getByRole('button', { name: /刷新页面/i })
-      
+
       expect(retryButton).toBeInTheDocument()
       expect(reloadButton).toBeInTheDocument()
     })
@@ -212,13 +213,13 @@ describe('CodeRunnerErrorBoundary', () => {
       const CustomError = () => {
         throw new TypeError('Type error')
       }
-      
+
       render(
         <CodeRunnerErrorBoundary>
           <CustomError />
         </CodeRunnerErrorBoundary>
       )
-      
+
       expect(screen.getByText('Type error')).toBeInTheDocument()
     })
 
@@ -226,13 +227,13 @@ describe('CodeRunnerErrorBoundary', () => {
       const NoMessageError = () => {
         throw new Error()
       }
-      
+
       render(
         <CodeRunnerErrorBoundary>
           <NoMessageError />
         </CodeRunnerErrorBoundary>
       )
-      
+
       expect(screen.getByText(/代码运行器遇到错误/)).toBeInTheDocument()
     })
   })

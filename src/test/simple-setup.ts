@@ -1,3 +1,4 @@
+import { createElement, type ReactNode } from 'react'
 import '@testing-library/jest-dom'
 import { vi } from 'vitest'
 
@@ -17,12 +18,12 @@ vi.mock('@monaco-editor/react', () => ({
       })),
       onDidChangeModelContent: vi.fn(),
     }
-    
+
     // Simulate editor mount
     if (onMount) {
       setTimeout(() => onMount(mockEditor, {}), 0)
     }
-    
+
     return null
   }),
 }))
@@ -57,7 +58,7 @@ global.IntersectionObserver = vi.fn().mockImplementation(() => ({
 
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: vi.fn().mockImplementation(query => ({
+  value: vi.fn().mockImplementation((query) => ({
     matches: false,
     media: query,
     onchange: null,
@@ -68,3 +69,9 @@ Object.defineProperty(window, 'matchMedia', {
     dispatchEvent: vi.fn(),
   })),
 })
+
+// Simple test wrapper component
+export const createWrapper = () => {
+  return ({ children }: { children: ReactNode }) =>
+    createElement('div', null, children)
+}

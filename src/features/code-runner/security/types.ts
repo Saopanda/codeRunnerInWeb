@@ -3,7 +3,11 @@
  */
 
 export interface SecurityIssue {
-  type: 'dangerous_api' | 'suspicious_pattern' | 'resource_abuse' | 'injection_risk'
+  type:
+    | 'dangerous_api'
+    | 'suspicious_pattern'
+    | 'resource_abuse'
+    | 'injection_risk'
   message: string
   line?: number
   severity: 'low' | 'medium' | 'high' | 'critical'
@@ -29,7 +33,12 @@ export interface RuntimeSecurityConfig {
 }
 
 export interface RuntimeViolation {
-  type: 'timeout' | 'memory_limit' | 'stack_overflow' | 'blocked_api' | 'resource_abuse'
+  type:
+    | 'timeout'
+    | 'memory_limit'
+    | 'stack_overflow'
+    | 'blocked_api'
+    | 'resource_abuse'
   message: string
   severity: 'low' | 'medium' | 'high' | 'critical'
   timestamp: number

@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
 import * as esbuild from 'esbuild-wasm'
 import type { BuildResult } from 'esbuild-wasm'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { typescriptCompiler } from '../typescript-compiler'
 
 // Mock esbuild-wasm
@@ -24,7 +24,9 @@ describe('TypeScriptCompiler', () => {
         warnings: [],
       }
 
-      vi.mocked(esbuild.build).mockResolvedValue(mockResult as unknown as BuildResult)
+      vi.mocked(esbuild.build).mockResolvedValue(
+        mockResult as unknown as BuildResult
+      )
 
       const result = await typescriptCompiler.compile(mockCode, {
         target: 'es2020',
@@ -50,7 +52,9 @@ describe('TypeScriptCompiler', () => {
         warnings: [],
       }
 
-      vi.mocked(esbuild.build).mockResolvedValue(mockResult as unknown as BuildResult)
+      vi.mocked(esbuild.build).mockResolvedValue(
+        mockResult as unknown as BuildResult
+      )
 
       const result = await typescriptCompiler.compile(mockCode, {
         target: 'es2020',
@@ -91,9 +95,11 @@ describe('TypeScriptCompiler', () => {
         warnings: [],
       }
 
-      vi.mocked(esbuild.transform).mockResolvedValue(mockResult as unknown as esbuild.TransformResult)
+      vi.mocked(esbuild.transform).mockResolvedValue(
+        mockResult as unknown as esbuild.TransformResult
+      )
 
-      const result =       await typescriptCompiler.transform(mockCode, {
+      const result = await typescriptCompiler.transform(mockCode, {
         loader: 'ts',
       })
 

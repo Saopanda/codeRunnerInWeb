@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { getPyodideConfig, isLocalPyodideSupported, checkPyodideResources } from '../pyodide-loader'
+import {
+  getPyodideConfig,
+  isLocalPyodideSupported,
+  checkPyodideResources,
+} from '../pyodide-loader'
 
 // Mock fetch
 global.fetch = vi.fn()
@@ -14,18 +18,18 @@ describe('Pyodide Loader', () => {
       // Mock window object
       Object.defineProperty(window, 'location', {
         value: {
-          protocol: 'http:'
+          protocol: 'http:',
         },
-        writable: true
+        writable: true,
       })
 
       const config = getPyodideConfig()
-      
+
       expect(config).toEqual({
         indexURL: '/pyodide/',
         fullStdLib: false,
         packageBaseUrl: 'https://cdn.jsdelivr.net/pyodide/v0.28.2/full/',
-        packages: ['numpy', 'pandas', 'matplotlib']
+        packages: ['numpy', 'pandas', 'matplotlib'],
       })
     })
 
@@ -33,17 +37,17 @@ describe('Pyodide Loader', () => {
       // Mock file protocol
       Object.defineProperty(window, 'location', {
         value: {
-          protocol: 'file:'
+          protocol: 'file:',
         },
-        writable: true
+        writable: true,
       })
 
       const config = getPyodideConfig()
-      
+
       expect(config).toEqual({
         indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.28.2/full/',
         fullStdLib: false,
-        packages: ['numpy', 'pandas', 'matplotlib']
+        packages: ['numpy', 'pandas', 'matplotlib'],
       })
     })
   })
@@ -52,9 +56,9 @@ describe('Pyodide Loader', () => {
     it('should return true for http protocol', () => {
       Object.defineProperty(window, 'location', {
         value: {
-          protocol: 'http:'
+          protocol: 'http:',
         },
-        writable: true
+        writable: true,
       })
 
       expect(isLocalPyodideSupported()).toBe(true)
@@ -63,9 +67,9 @@ describe('Pyodide Loader', () => {
     it('should return true for https protocol', () => {
       Object.defineProperty(window, 'location', {
         value: {
-          protocol: 'https:'
+          protocol: 'https:',
         },
-        writable: true
+        writable: true,
       })
 
       expect(isLocalPyodideSupported()).toBe(true)
@@ -74,9 +78,9 @@ describe('Pyodide Loader', () => {
     it('should return false for file protocol', () => {
       Object.defineProperty(window, 'location', {
         value: {
-          protocol: 'file:'
+          protocol: 'file:',
         },
-        writable: true
+        writable: true,
       })
 
       expect(isLocalPyodideSupported()).toBe(false)
@@ -88,28 +92,30 @@ describe('Pyodide Loader', () => {
       // Mock window object for local support
       Object.defineProperty(window, 'location', {
         value: {
-          protocol: 'http:'
+          protocol: 'http:',
         },
-        writable: true
+        writable: true,
       })
 
       vi.mocked(fetch).mockResolvedValue({
-        ok: true
+        ok: true,
       } as Response)
 
       const result = await checkPyodideResources()
-      
+
       expect(result).toBe(true)
-      expect(fetch).toHaveBeenCalledWith('/pyodide/pyodide.js', { method: 'HEAD' })
+      expect(fetch).toHaveBeenCalledWith('/pyodide/pyodide.js', {
+        method: 'HEAD',
+      })
     })
 
     it('should return false when resources are not available', async () => {
       vi.mocked(fetch).mockResolvedValue({
-        ok: false
+        ok: false,
       } as Response)
 
       const result = await checkPyodideResources()
-      
+
       expect(result).toBe(false)
     })
 
@@ -117,7 +123,7 @@ describe('Pyodide Loader', () => {
       vi.mocked(fetch).mockRejectedValue(new Error('Network error'))
 
       const result = await checkPyodideResources()
-      
+
       expect(result).toBe(false)
     })
   })

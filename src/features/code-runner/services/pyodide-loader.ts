@@ -28,15 +28,15 @@ export function getPyodideConfig(): PyodideConfig {
       fullStdLib: false,
       // 包从CDN加载以避免SRI错误
       packageBaseUrl: 'https://cdn.jsdelivr.net/pyodide/v0.28.2/full/',
-      packages: ['numpy', 'pandas', 'matplotlib']
+      packages: ['numpy', 'pandas', 'matplotlib'],
     }
   }
-  
+
   // 回退到CDN
   return {
     indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.28.2/full/',
     fullStdLib: false,
-    packages: ['numpy', 'pandas', 'matplotlib']
+    packages: ['numpy', 'pandas', 'matplotlib'],
   }
 }
 
@@ -47,25 +47,24 @@ export async function preloadPyodideResources(): Promise<void> {
   if (typeof window === 'undefined') return
 
   const config = getPyodideConfig()
-  
+
   // 预加载关键资源
   const resources = [
     `${config.indexURL}pyodide.js`,
     `${config.indexURL}pyodide.asm.wasm`,
-    `${config.indexURL}python_stdlib.zip`
+    `${config.indexURL}python_stdlib.zip`,
   ]
 
   try {
     await Promise.all(
-      resources.map(resource => 
-        fetch(resource, { method: 'HEAD' })
-          .then(response => {
-            if (!response.ok) {
-              // eslint-disable-next-line no-console
-              console.warn(`Pyodide资源加载失败: ${resource}`)
-            }
-            return response
-          })
+      resources.map((resource) =>
+        fetch(resource, { method: 'HEAD' }).then((response) => {
+          if (!response.ok) {
+            // eslint-disable-next-line no-console
+            console.warn(`Pyodide资源加载失败: ${resource}`)
+          }
+          return response
+        })
       )
     )
   } catch (error) {
@@ -81,9 +80,11 @@ export async function checkPyodideResources(): Promise<boolean> {
   if (typeof window === 'undefined') return false
 
   const config = getPyodideConfig()
-  
+
   try {
-    const response = await fetch(`${config.indexURL}pyodide.js`, { method: 'HEAD' })
+    const response = await fetch(`${config.indexURL}pyodide.js`, {
+      method: 'HEAD',
+    })
     return response.ok
   } catch (error) {
     // eslint-disable-next-line no-console

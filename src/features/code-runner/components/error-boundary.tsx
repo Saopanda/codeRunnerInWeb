@@ -1,9 +1,15 @@
 import React, { Component, type ErrorInfo, type ReactNode } from 'react'
 import { AlertTriangle, RefreshCw, Bug, Home } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { logger } from '@/lib/logger'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 
 interface Props {
   children: ReactNode
@@ -29,30 +35,30 @@ export class CodeRunnerErrorBoundary extends Component<Props, State> {
 
   constructor(props: Props) {
     super(props)
-    this.state = { 
-      hasError: false, 
-      retryCount: 0 
+    this.state = {
+      hasError: false,
+      retryCount: 0,
     }
   }
-  
+
   static getDerivedStateFromError(error: Error): Partial<State> {
-    return { 
-      hasError: true, 
+    return {
+      hasError: true,
       error,
-      errorId: `error-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      errorId: `error-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     }
   }
-  
+
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     logger.error('Code Runner Error Boundary:', error, errorInfo)
-    
+
     this.setState({ error, errorInfo })
-    
+
     // 调用外部错误处理函数
     if (this.props.onError) {
       this.props.onError(error, errorInfo)
     }
-    
+
     // 发送错误报告
     this.reportError(error, errorInfo)
   }
@@ -64,7 +70,7 @@ export class CodeRunnerErrorBoundary extends Component<Props, State> {
         hasError: false,
         error: undefined,
         errorInfo: undefined,
-        retryCount: 0
+        retryCount: 0,
       })
     }
   }
@@ -79,9 +85,9 @@ export class CodeRunnerErrorBoundary extends Component<Props, State> {
       userAgent: navigator.userAgent,
       url: window.location.href,
       retryCount: this.state.retryCount,
-      errorBoundary: 'CodeRunnerErrorBoundary'
+      errorBoundary: 'CodeRunnerErrorBoundary',
     }
-    
+
     // 在开发环境下打印详细错误信息
     if (process.env.NODE_ENV === 'development') {
       logger.dev('🚨 Code Runner Error Report')
@@ -89,20 +95,22 @@ export class CodeRunnerErrorBoundary extends Component<Props, State> {
       logger.error('Error Info:', errorInfo)
       logger.dev('Error Report:', errorReport)
     }
-    
+
     // 这里可以集成错误收集服务（如 Sentry）
     // sendErrorToService(errorReport)
-    
+
     // 存储到本地存储以便调试
     try {
-      const existingErrors = JSON.parse(localStorage.getItem('code-runner-errors') || '[]')
+      const existingErrors = JSON.parse(
+        localStorage.getItem('code-runner-errors') || '[]'
+      )
       existingErrors.push(errorReport)
-      
+
       // 只保留最近10个错误
       if (existingErrors.length > 10) {
         existingErrors.splice(0, existingErrors.length - 10)
       }
-      
+
       localStorage.setItem('code-runner-errors', JSON.stringify(existingErrors))
     } catch (e) {
       logger.warn('Failed to store error report:', e)
@@ -111,11 +119,11 @@ export class CodeRunnerErrorBoundary extends Component<Props, State> {
 
   private handleRetry = () => {
     if (this.state.retryCount < this.maxRetries) {
-      this.setState(prevState => ({
+      this.setState((prevState) => ({
         hasError: false,
         error: undefined,
         errorInfo: undefined,
-        retryCount: prevState.retryCount + 1
+        retryCount: prevState.retryCount + 1,
       }))
     }
   }
@@ -133,28 +141,34 @@ export class CodeRunnerErrorBoundary extends Component<Props, State> {
     if (!error) return 'low'
 
     const message = error.message.toLowerCase()
-    
+
     // 关键错误
-    if (message.includes('chunk load') || 
-        message.includes('loading') || 
-        message.includes('network')) {
+    if (
+      message.includes('chunk load') ||
+      message.includes('loading') ||
+      message.includes('network')
+    ) {
       return 'critical'
     }
-    
+
     // 高优先级错误
-    if (message.includes('undefined') || 
-        message.includes('null') || 
-        message.includes('reference')) {
+    if (
+      message.includes('undefined') ||
+      message.includes('null') ||
+      message.includes('reference')
+    ) {
       return 'high'
     }
-    
+
     // 中等优先级错误
-    if (message.includes('type') || 
-        message.includes('property') || 
-        message.includes('method')) {
+    if (
+      message.includes('type') ||
+      message.includes('property') ||
+      message.includes('method')
+    ) {
       return 'medium'
     }
-    
+
     return 'low'
   }
 
@@ -163,7 +177,7 @@ export class CodeRunnerErrorBoundary extends Component<Props, State> {
     if (!error) return 'Unknown'
 
     const message = error.message.toLowerCase()
-    
+
     if (message.includes('chunk load')) return 'Chunk Load Error'
     if (message.includes('loading')) return 'Loading Error'
     if (message.includes('network')) return 'Network Error'
@@ -172,7 +186,7 @@ export class CodeRunnerErrorBoundary extends Component<Props, State> {
     if (message.includes('type')) return 'Type Error'
     if (message.includes('property')) return 'Property Error'
     if (message.includes('method')) return 'Method Error'
-    
+
     return 'Runtime Error'
   }
 
@@ -192,53 +206,57 @@ export class CodeRunnerErrorBoundary extends Component<Props, State> {
         low: 'bg-blue-50 border-blue-200 text-blue-800',
         medium: 'bg-yellow-50 border-yellow-200 text-yellow-800',
         high: 'bg-orange-50 border-orange-200 text-orange-800',
-        critical: 'bg-red-50 border-red-200 text-red-800'
+        critical: 'bg-red-50 border-red-200 text-red-800',
       }
 
       const severityIcons = {
         low: 'ℹ️',
         medium: '⚠️',
         high: '🚨',
-        critical: '💥'
+        critical: '💥',
       }
 
       return (
-        <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-          <Card className="w-full max-w-2xl">
-            <CardHeader className="text-center">
-              <div className="flex items-center justify-center mb-4">
-                <div className={`p-3 rounded-full ${severityColors[severity]}`}>
-                  <AlertTriangle className="h-8 w-8" />
+        <div className='bg-background flex min-h-screen items-center justify-center p-4'>
+          <Card className='w-full max-w-2xl'>
+            <CardHeader className='text-center'>
+              <div className='mb-4 flex items-center justify-center'>
+                <div className={`rounded-full p-3 ${severityColors[severity]}`}>
+                  <AlertTriangle className='h-8 w-8' />
                 </div>
               </div>
-              <CardTitle className="text-2xl font-bold">
+              <CardTitle className='text-2xl font-bold'>
                 {severityIcons[severity]} 代码运行器遇到错误
               </CardTitle>
               <CardDescription>
                 很抱歉，代码运行器遇到了一个意外错误。请尝试以下解决方案。
               </CardDescription>
             </CardHeader>
-            
-            <CardContent className="space-y-6">
+
+            <CardContent className='space-y-6'>
               {/* 错误信息 */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Badge variant={severity === 'critical' ? 'destructive' : 'secondary'}>
+              <div className='space-y-3'>
+                <div className='flex items-center gap-2'>
+                  <Badge
+                    variant={
+                      severity === 'critical' ? 'destructive' : 'secondary'
+                    }
+                  >
                     {errorType}
                   </Badge>
-                  <Badge variant="outline">
+                  <Badge variant='outline'>
                     严重程度: {severity.toUpperCase()}
                   </Badge>
                   {this.state.errorId && (
-                    <Badge variant="outline" className="text-xs">
+                    <Badge variant='outline' className='text-xs'>
                       ID: {this.state.errorId.slice(-8)}
                     </Badge>
                   )}
                 </div>
-                
+
                 {error && (
-                  <div className="p-3 bg-muted rounded-lg">
-                    <p className="font-mono text-sm break-words">
+                  <div className='bg-muted rounded-lg p-3'>
+                    <p className='font-mono text-sm break-words'>
                       {error.message}
                     </p>
                   </div>
@@ -246,34 +264,34 @@ export class CodeRunnerErrorBoundary extends Component<Props, State> {
               </div>
 
               {/* 操作按钮 */}
-              <div className="flex flex-wrap gap-3 justify-center">
+              <div className='flex flex-wrap justify-center gap-3'>
                 {canRetry && (
-                  <Button onClick={this.handleRetry} variant="default">
-                    <RefreshCw className="h-4 w-4 mr-2" />
+                  <Button onClick={this.handleRetry} variant='default'>
+                    <RefreshCw className='mr-2 h-4 w-4' />
                     重试 ({this.maxRetries - retryCount} 次剩余)
                   </Button>
                 )}
-                
-                <Button onClick={this.handleReload} variant="outline">
-                  <RefreshCw className="h-4 w-4 mr-2" />
+
+                <Button onClick={this.handleReload} variant='outline'>
+                  <RefreshCw className='mr-2 h-4 w-4' />
                   刷新页面
                 </Button>
-                
-                <Button onClick={this.handleGoHome} variant="ghost">
-                  <Home className="h-4 w-4 mr-2" />
+
+                <Button onClick={this.handleGoHome} variant='ghost'>
+                  <Home className='mr-2 h-4 w-4' />
                   返回首页
                 </Button>
               </div>
 
               {/* 错误详情 */}
               {this.props.showDetails && this.state.errorInfo && (
-                <details className="mt-4">
-                  <summary className="cursor-pointer text-sm font-medium text-muted-foreground hover:text-foreground">
-                    <Bug className="h-4 w-4 inline mr-1" />
+                <details className='mt-4'>
+                  <summary className='text-muted-foreground hover:text-foreground cursor-pointer text-sm font-medium'>
+                    <Bug className='mr-1 inline h-4 w-4' />
                     查看技术详情
                   </summary>
-                  <div className="mt-2 p-3 bg-muted rounded-lg">
-                    <pre className="text-xs overflow-auto max-h-40">
+                  <div className='bg-muted mt-2 rounded-lg p-3'>
+                    <pre className='max-h-40 overflow-auto text-xs'>
                       {this.state.errorInfo.componentStack}
                     </pre>
                   </div>
@@ -281,12 +299,10 @@ export class CodeRunnerErrorBoundary extends Component<Props, State> {
               )}
 
               {/* 帮助信息 */}
-              <div className="text-center text-sm text-muted-foreground">
-                <p>
-                  如果问题持续存在，请尝试清除浏览器缓存或联系技术支持。
-                </p>
+              <div className='text-muted-foreground text-center text-sm'>
+                <p>如果问题持续存在，请尝试清除浏览器缓存或联系技术支持。</p>
                 {process.env.NODE_ENV === 'development' && (
-                  <p className="mt-2 font-mono text-xs">
+                  <p className='mt-2 font-mono text-xs'>
                     开发模式 - 详细错误信息已记录到控制台
                   </p>
                 )}
@@ -296,7 +312,7 @@ export class CodeRunnerErrorBoundary extends Component<Props, State> {
         </div>
       )
     }
-    
+
     return this.props.children
   }
 }
@@ -315,7 +331,7 @@ export function withErrorBoundary<P extends object>(
   )
 
   WrappedComponent.displayName = `withErrorBoundary(${Component.displayName || Component.name})`
-  
+
   return WrappedComponent
 }
 

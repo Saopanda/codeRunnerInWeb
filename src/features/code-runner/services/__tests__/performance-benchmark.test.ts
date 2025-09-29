@@ -1,7 +1,6 @@
- 
 import { describe, it, expect, vi } from 'vitest'
-import { typescriptCompiler } from '../typescript-compiler'
 import { performanceMonitor } from '../performance-monitor'
+import { typescriptCompiler } from '../typescript-compiler'
 
 describe('Performance Benchmark', () => {
   // Mock esbuild-wasm for consistent testing
@@ -43,7 +42,7 @@ describe('Performance Benchmark', () => {
       const options = {
         target: 'es2020' as const,
         format: 'iife' as const,
-        minify: false
+        minify: false,
       }
 
       // 清空性能监控数据
@@ -79,30 +78,33 @@ describe('Performance Benchmark', () => {
 
     it('should track performance metrics correctly', async () => {
       const testCode = 'const message: string = "Hello Performance Test";'
-      
+
       performanceMonitor.clearMetrics()
-      
+
       // 编译代码
       await typescriptCompiler.compile(testCode, {
         target: 'es2020',
         format: 'iife',
-        minify: false
+        minify: false,
       })
 
       // 获取性能报告
       const report = performanceMonitor.getPerformanceReport()
-      
+
       // 在测试环境中，由于 mock，某些指标可能为0
       expect(report.totalOperations).toBeGreaterThanOrEqual(0)
       expect(report.compilationTime).toBeGreaterThanOrEqual(0)
-      
+
       // 验证编译指标
-      const compilationMetrics = performanceMonitor.getMetricsByType('compilation')
+      const compilationMetrics =
+        performanceMonitor.getMetricsByType('compilation')
       expect(compilationMetrics.length).toBeGreaterThanOrEqual(0)
-      
-      const cacheHitMetrics = compilationMetrics.filter(m => m.name === 'cache-hit')
+
+      const cacheHitMetrics = compilationMetrics.filter(
+        (m) => m.name === 'cache-hit'
+      )
       expect(cacheHitMetrics.length).toBeGreaterThanOrEqual(0)
-      
+
       console.log(`总操作数: ${report.totalOperations}`)
       console.log(`平均编译时间: ${report.compilationTime.toFixed(2)}ms`)
       console.log(`缓存命中率: ${report.cacheHitRate.toFixed(2)}%`)
@@ -113,9 +115,9 @@ describe('Performance Benchmark', () => {
     it('should monitor memory usage', () => {
       // 触发内存监控
       performanceMonitor.monitorMemory()
-      
+
       const memoryMetrics = performanceMonitor.getMetricsByType('memory')
-      
+
       // 在测试环境中，performance.memory 可能不可用
       if (memoryMetrics.length > 0) {
         const memoryMetric = memoryMetrics[0]
@@ -135,7 +137,7 @@ describe('Performance Benchmark', () => {
         'const x: number = 42;',
         'interface Test { value: string; }',
         'class MyClass { constructor() {} }',
-        'type Status = "loading" | "success" | "error";'
+        'type Status = "loading" | "success" | "error";',
       ]
 
       performanceMonitor.clearMetrics()
@@ -146,7 +148,7 @@ describe('Performance Benchmark', () => {
         await typescriptCompiler.compile(testCode, {
           target: 'es2020',
           format: 'iife',
-          minify: false
+          minify: false,
         })
       }
 
@@ -155,7 +157,7 @@ describe('Performance Benchmark', () => {
         await typescriptCompiler.compile(testCode, {
           target: 'es2020',
           format: 'iife',
-          minify: false
+          minify: false,
         })
       }
 
@@ -166,18 +168,20 @@ describe('Performance Benchmark', () => {
         name: 'test-operation',
         duration: 100,
         timestamp: Date.now(),
-        type: 'timing'
+        type: 'timing',
       })
-      
+
       const updatedReport = performanceMonitor.getPerformanceReport()
-      
+
       // 验证性能监控效果
       expect(updatedReport.totalOperations).toBeGreaterThan(0)
 
       console.log('\n=== 性能优化总结 ===')
       console.log(`总操作数: ${updatedReport.totalOperations}`)
-      console.log(`平均响应时间: ${updatedReport.averageResponseTime.toFixed(2)}ms`)
-      
+      console.log(
+        `平均响应时间: ${updatedReport.averageResponseTime.toFixed(2)}ms`
+      )
+
       // 验证优化目标
       expect(updatedReport.totalOperations).toBeGreaterThanOrEqual(1) // 应该有性能监控
     })

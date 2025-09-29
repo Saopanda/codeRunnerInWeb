@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import { OutputDisplay } from '../output-display'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { CodeOutput } from '../../stores/code-runner-store'
+import { OutputDisplay } from '../output-display'
 
 // Mock useCodeRunnerStore
 const mockStore = {
@@ -19,20 +19,20 @@ const mockStore = {
     startTime: null,
     timeoutId: null,
     executionTime: null,
-    firstExecutionTime: null
+    firstExecutionTime: null,
   },
   compileState: {
     isCompiling: false,
     compileErrors: [],
     compileWarnings: [],
     compileTime: null,
-    firstCompileTime: null
+    firstCompileTime: null,
   },
-  language: 'javascript' as const
+  language: 'javascript' as const,
 }
 
 vi.mock('../../stores/code-runner-store', () => ({
-  useCodeRunnerStore: () => mockStore
+  useCodeRunnerStore: () => mockStore,
 }))
 
 describe('OutputDisplay', () => {
@@ -47,7 +47,7 @@ describe('OutputDisplay', () => {
   describe('rendering', () => {
     it('should render with empty outputs', () => {
       render(<OutputDisplay />)
-      
+
       expect(screen.getByText('等待执行代码...')).toBeInTheDocument()
     })
 
@@ -58,13 +58,13 @@ describe('OutputDisplay', () => {
           type: 'log',
           message: 'Hello World',
           timestamp: Date.now(),
-          source: 'console'
-        }
+          source: 'console',
+        },
       ]
       mockStore.outputs = outputs
-      
+
       render(<OutputDisplay />)
-      
+
       expect(screen.getByText('Hello World')).toBeInTheDocument()
       expect(screen.queryByText('等待执行...')).not.toBeInTheDocument()
     })
@@ -79,12 +79,12 @@ describe('OutputDisplay', () => {
           message: 'Log message',
           timestamp: Date.now(),
           source: 'console',
-        }
+        },
       ]
       mockStore.outputs = outputs
-      
+
       render(<OutputDisplay />)
-      
+
       expect(screen.getByText('Log message')).toBeInTheDocument()
     })
 
@@ -96,12 +96,12 @@ describe('OutputDisplay', () => {
           message: 'Error message',
           timestamp: Date.now(),
           source: 'error',
-        }
+        },
       ]
       mockStore.outputs = outputs
-      
+
       render(<OutputDisplay />)
-      
+
       expect(screen.getByText('Error message')).toBeInTheDocument()
     })
 
@@ -113,12 +113,12 @@ describe('OutputDisplay', () => {
           message: 'Warning message',
           timestamp: Date.now(),
           source: 'console',
-        }
+        },
       ]
       mockStore.outputs = outputs
-      
+
       render(<OutputDisplay />)
-      
+
       expect(screen.getByText('Warning message')).toBeInTheDocument()
     })
 
@@ -130,12 +130,12 @@ describe('OutputDisplay', () => {
           message: 'Info message',
           timestamp: Date.now(),
           source: 'console',
-        }
+        },
       ]
       mockStore.outputs = outputs
-      
+
       render(<OutputDisplay />)
-      
+
       expect(screen.getByText('Info message')).toBeInTheDocument()
     })
   })
@@ -156,12 +156,12 @@ describe('OutputDisplay', () => {
           message: 'Second message',
           timestamp: Date.now() + 1000,
           source: 'error',
-        }
+        },
       ]
       mockStore.outputs = outputs
-      
+
       render(<OutputDisplay />)
-      
+
       const outputElements = screen.getAllByText(/message/)
       expect(outputElements[0]).toHaveTextContent('First message')
       expect(outputElements[1]).toHaveTextContent('Second message')
@@ -171,8 +171,10 @@ describe('OutputDisplay', () => {
   describe('clear functionality', () => {
     it('should not have clear button (not implemented)', () => {
       render(<OutputDisplay />)
-      
-      expect(screen.queryByRole('button', { name: /清空/i })).not.toBeInTheDocument()
+
+      expect(
+        screen.queryByRole('button', { name: /清空/i })
+      ).not.toBeInTheDocument()
     })
   })
 
@@ -185,12 +187,12 @@ describe('OutputDisplay', () => {
           message: 'JS output',
           timestamp: Date.now(),
           source: 'console',
-        }
+        },
       ]
       mockStore.outputs = outputs
-      
+
       render(<OutputDisplay />)
-      
+
       expect(screen.getByText('JS output')).toBeInTheDocument()
     })
 
@@ -202,12 +204,12 @@ describe('OutputDisplay', () => {
           message: 'TS output',
           timestamp: Date.now(),
           source: 'console',
-        }
+        },
       ]
       mockStore.outputs = outputs
-      
+
       render(<OutputDisplay />)
-      
+
       expect(screen.getByText('TS output')).toBeInTheDocument()
     })
 
@@ -219,12 +221,12 @@ describe('OutputDisplay', () => {
           message: 'PHP output',
           timestamp: Date.now(),
           source: 'console',
-        }
+        },
       ]
       mockStore.outputs = outputs
-      
+
       render(<OutputDisplay />)
-      
+
       expect(screen.getByText('PHP output')).toBeInTheDocument()
     })
   })
@@ -238,12 +240,12 @@ describe('OutputDisplay', () => {
           message: 'Recent message',
           timestamp: Date.now(),
           source: 'console',
-        }
+        },
       ]
       mockStore.outputs = outputs
-      
+
       render(<OutputDisplay />)
-      
+
       expect(screen.getByText('Recent message')).toBeInTheDocument()
     })
   })
@@ -251,7 +253,7 @@ describe('OutputDisplay', () => {
   describe('accessibility', () => {
     it('should have proper structure', () => {
       render(<OutputDisplay />)
-      
+
       expect(screen.getByText('等待执行代码...')).toBeInTheDocument()
     })
   })
