@@ -125,7 +125,7 @@ export class PythonSandboxManager {
   }
 
   // Worker 模式下不再使用
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   
 
   public async executeCode(code: string, config: SandboxConfig): Promise<void> {
@@ -204,7 +204,7 @@ export class PythonSandboxManager {
   }
 
   // Worker 模式下不再使用
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   
 
   private formatPythonOutput(value: any): string { // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -347,7 +347,7 @@ export class PythonSandboxManager {
   }
 
   // Worker 模式下不再使用
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   
 
   private cleanupExecution(): void {

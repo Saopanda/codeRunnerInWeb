@@ -1,11 +1,11 @@
 # 在线代码运行器
 
-一个安全的多语言在线代码运行器，支持 JavaScript、TypeScript 和 PHP 的实时编辑和执行。基于 React + TypeScript + Vite 构建，使用 Monaco Editor 提供专业的代码编辑体验。
+一个安全的多语言在线代码运行器，支持 JavaScript、TypeScript、PHP 和 Python 的实时编辑和执行。基于 React + TypeScript + Vite 构建，使用 Monaco Editor 提供专业的代码编辑体验，支持科学计算库和数据可视化。
 
 ## ✨ 功能特性
 
 ### 🚀 核心功能
-- **多语言支持**: JavaScript、TypeScript、PHP 三种编程语言
+- **多语言支持**: JavaScript、TypeScript、PHP、Python 四种编程语言
 - **专业代码编辑器**: 基于 Monaco Editor，支持语法高亮、自动补全
 - **安全沙箱执行**: 在隔离环境中安全执行代码，支持多种语言
 - **实时输出显示**: 支持 console.log、console.error 等输出
@@ -60,7 +60,7 @@ pnpm run preview
 ## 📖 使用指南
 
 ### 基本使用
-1. 选择编程语言（JavaScript、TypeScript、PHP）
+1. 选择编程语言（JavaScript、TypeScript、PHP、Python）
 2. 在左侧编辑器中编写代码
 3. 点击"运行代码"按钮执行
 4. 在右侧实时查看输出结果
@@ -81,6 +81,13 @@ pnpm run preview
 - ✅ 常用内置函数
 - ✅ 数组和字符串操作
 - ✅ 错误处理和异常
+
+#### Python
+- ✅ Python 3.11+ 语法
+- ✅ 科学计算库支持（NumPy、Pandas、Matplotlib）
+- ✅ 数据处理和可视化
+- ✅ 机器学习库（scikit-learn）
+- ✅ 内置模块和标准库
 
 ### 限制的功能
 - ❌ 不能访问 DOM（document、window）

@@ -11,15 +11,15 @@ const ThrowError = ({ shouldThrow }: { shouldThrow: boolean }) => {
 }
 
 // Mock console.error to avoid noise in tests
-// eslint-disable-next-line no-console
+ 
 const originalConsoleError = console.error
 beforeEach(() => {
-  // eslint-disable-next-line no-console
+   
   console.error = vi.fn()
 })
 
 afterEach(() => {
-  // eslint-disable-next-line no-console
+   
   console.error = originalConsoleError
 })
 
@@ -165,7 +165,7 @@ describe('CodeRunnerErrorBoundary', () => {
         </CodeRunnerErrorBoundary>
       )
       
-      // eslint-disable-next-line no-console
+       
       expect(console.error).toHaveBeenCalled()
     })
 

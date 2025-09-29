@@ -185,9 +185,10 @@ alwaysApply: true
 - ✅ 响应式设计
 - ✅ 错误边界和恢复机制
 
-### 第六期：Python语言支持（计划中）
-- 🔄 集成 Pyodide Python WebAssembly 运行时
-- 🔄 实现 Python 沙箱管理器（PythonSandboxManager）
-- 🔄 添加 Python 代码模板和示例
-- 🔄 支持科学计算库（NumPy、Pandas、Matplotlib）
-- 🔄 完善 Python 安全限制和资源管理
+### 第六期：Python语言支持（已完成）
+- ✅ 集成 Pyodide Python WebAssembly 运行时（v0.28.2）
+- ✅ 实现 Python 沙箱管理器（PythonSandboxManager）
+- ✅ 添加 Python 代码模板和示例
+- ✅ 支持科学计算库（NumPy、Pandas、Matplotlib、SciPy、scikit-learn）
+- ✅ 完善 Python 安全限制和资源管理
+- ✅ 集成到主界面，支持语言切换

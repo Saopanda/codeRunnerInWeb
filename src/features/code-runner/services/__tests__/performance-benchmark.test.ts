@@ -1,4 +1,4 @@
-/* eslint-disable no-console */
+ 
 import { describe, it, expect, vi } from 'vitest'
 import { typescriptCompiler } from '../typescript-compiler'
 import { performanceMonitor } from '../performance-monitor'
