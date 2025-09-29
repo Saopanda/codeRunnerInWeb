@@ -64,6 +64,10 @@ interface CodeRunnerState {
   setFilter: (filter: 'all' | 'log' | 'error' | 'warn' | 'info' | 'system') => void
   searchTerm: string
   setSearchTerm: (term: string) => void
+  
+  // 显示模式
+  displayMode: 'terminal' | 'page'
+  setDisplayMode: (mode: 'terminal' | 'page') => void
   selectedOutputs: string[]
   toggleOutputSelection: (id: string) => void
   clearSelection: () => void
@@ -197,6 +201,11 @@ export const useCodeRunnerStore = create<CodeRunnerState>((set) => ({
   setFilter: (filter) => set({ filter }),
   searchTerm: '',
   setSearchTerm: (searchTerm) => set({ searchTerm }),
+  
+  // 显示模式
+  displayMode: 'terminal',
+  setDisplayMode: (mode) => set({ displayMode: mode }),
+  
   selectedOutputs: [],
   toggleOutputSelection: (id) => set((prev) => ({
     selectedOutputs: prev.selectedOutputs.includes(id)
