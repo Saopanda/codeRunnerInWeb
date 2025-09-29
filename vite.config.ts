@@ -23,10 +23,28 @@ export default defineConfig({
     headers: {
       'Cross-Origin-Embedder-Policy': 'require-corp',
       'Cross-Origin-Opener-Policy': 'same-origin',
+      // 禁用SRI检查以避免本地Pyodide文件的完整性验证问题
+      'Cross-Origin-Resource-Policy': 'cross-origin',
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        assetFileNames: (assetInfo) => {
+          // 将Pyodide相关文件放在pyodide目录下
+          if (assetInfo.name?.includes('pyodide')) {
+            return 'pyodide/[name][extname]'
+          }
+          return 'assets/[name]-[hash][extname]'
+        },
+      },
+    },
+  },
+  worker: {
+    format: 'es',
+  },
   optimizeDeps: {
-    exclude: ['php-wasm'],
+    exclude: ['php-wasm', 'pyodide'],
   },
   assetsInclude: ['**/*.wasm'],
 })

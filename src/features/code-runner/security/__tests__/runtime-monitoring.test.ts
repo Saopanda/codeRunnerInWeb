@@ -6,9 +6,9 @@ Object.defineProperty(performance, 'memory', {
   value: {
     usedJSHeapSize: 1024 * 1024, // 1MB
     totalJSHeapSize: 2048 * 1024, // 2MB
-    jsHeapSizeLimit: 4096 * 1024 // 4MB
+    jsHeapSizeLimit: 4096 * 1024, // 4MB
   },
-  writable: true
+  writable: true,
 })
 
 describe('RuntimeMonitoringLayer', () => {
@@ -22,7 +22,7 @@ describe('RuntimeMonitoringLayer', () => {
       allowedAPIs: ['console', 'Date', 'Math'],
       blockedAPIs: ['eval', 'document', 'window'],
       enableResourceMonitoring: true,
-      enableCodeAnalysis: true
+      enableCodeAnalysis: true,
     })
   })
 
@@ -30,7 +30,7 @@ describe('RuntimeMonitoringLayer', () => {
     it('should start and stop monitoring', () => {
       monitor.startMonitoring()
       expect(monitor.getMetrics().totalViolations).toBe(0)
-      
+
       monitor.stopMonitoring()
       expect(monitor.getEvents()).toHaveLength(2) // start and stop events
     })
@@ -38,10 +38,10 @@ describe('RuntimeMonitoringLayer', () => {
     it('should not start monitoring twice', () => {
       monitor.startMonitoring()
       const firstStart = monitor.getEvents().length
-      
+
       monitor.startMonitoring()
       const secondStart = monitor.getEvents().length
-      
+
       expect(secondStart).toBe(firstStart) // No additional start event
     })
   })
@@ -49,40 +49,40 @@ describe('RuntimeMonitoringLayer', () => {
   describe('checkAPIAccess', () => {
     it('should allow access to allowed APIs', () => {
       monitor.startMonitoring()
-      
+
       expect(monitor.checkAPIAccess('console')).toBe(true)
       expect(monitor.checkAPIAccess('Date')).toBe(true)
       expect(monitor.checkAPIAccess('Math')).toBe(true)
-      
+
       monitor.stopMonitoring()
     })
 
     it('should block access to blocked APIs', () => {
       monitor.startMonitoring()
-      
+
       expect(monitor.checkAPIAccess('eval')).toBe(false)
       expect(monitor.checkAPIAccess('document')).toBe(false)
       expect(monitor.checkAPIAccess('window')).toBe(false)
-      
+
       const violations = monitor.getViolations()
       expect(violations.length).toBe(3)
-      expect(violations.every(v => v.type === 'blocked_api')).toBe(true)
-      
+      expect(violations.every((v) => v.type === 'blocked_api')).toBe(true)
+
       monitor.stopMonitoring()
     })
 
     it('should record violations for blocked API access', () => {
       monitor.startMonitoring()
-      
+
       monitor.checkAPIAccess('eval', { context: 'test' })
-      
+
       const violations = monitor.getViolations()
       expect(violations).toHaveLength(1)
       expect(violations[0].type).toBe('blocked_api')
       expect(violations[0].message).toContain('eval')
       expect(violations[0].metadata?.apiName).toBe('eval')
       expect(violations[0].metadata?.context).toEqual({ context: 'test' })
-      
+
       monitor.stopMonitoring()
     })
   })
@@ -90,42 +90,42 @@ describe('RuntimeMonitoringLayer', () => {
   describe('checkResourceLimits', () => {
     it('should allow normal resource usage', () => {
       monitor.startMonitoring()
-      
+
       // Mock normal memory usage
       Object.defineProperty(performance, 'memory', {
         value: {
           usedJSHeapSize: 512 * 1024, // 0.5MB (under limit)
           totalJSHeapSize: 1024 * 1024,
-          jsHeapSizeLimit: 4096 * 1024
+          jsHeapSizeLimit: 4096 * 1024,
         },
-        writable: true
+        writable: true,
       })
-      
+
       expect(monitor.checkResourceLimits()).toBe(true)
-      
+
       monitor.stopMonitoring()
     })
 
     it('should detect memory limit violations', () => {
       monitor.startMonitoring()
-      
+
       // Mock excessive memory usage
       Object.defineProperty(performance, 'memory', {
         value: {
           usedJSHeapSize: 2048 * 1024, // 2MB (over 1MB limit)
           totalJSHeapSize: 2048 * 1024,
-          jsHeapSizeLimit: 4096 * 1024
+          jsHeapSizeLimit: 4096 * 1024,
         },
-        writable: true
+        writable: true,
       })
-      
+
       expect(monitor.checkResourceLimits()).toBe(false)
-      
+
       const violations = monitor.getViolations()
       expect(violations).toHaveLength(1)
       expect(violations[0].type).toBe('memory_limit')
       expect(violations[0].severity).toBe('high')
-      
+
       monitor.stopMonitoring()
     })
   })
@@ -136,7 +136,7 @@ describe('RuntimeMonitoringLayer', () => {
         type: 'timeout',
         message: 'Execution timeout',
         severity: 'high',
-        metadata: { timeout: 5000 }
+        metadata: { timeout: 5000 },
       })
 
       const violations = monitor.getViolations()
@@ -154,7 +154,7 @@ describe('RuntimeMonitoringLayer', () => {
         monitor.recordViolation({
           type: 'timeout',
           message: `Violation ${i}`,
-          severity: 'low'
+          severity: 'low',
         })
       }
 
@@ -166,16 +166,16 @@ describe('RuntimeMonitoringLayer', () => {
 
     it('should stop execution on critical violations', () => {
       monitor.startMonitoring()
-      
+
       // This should throw an error
       expect(() => {
         monitor.recordViolation({
           type: 'stack_overflow',
           message: 'Stack overflow detected',
-          severity: 'critical'
+          severity: 'critical',
         })
       }).toThrow('代码执行被安全监控阻止')
-      
+
       monitor.stopMonitoring()
     })
   })
@@ -185,7 +185,7 @@ describe('RuntimeMonitoringLayer', () => {
       monitor.recordEvent({
         type: 'analysis',
         code: 'console.log("test")',
-        metadata: { result: 'safe' }
+        metadata: { result: 'safe' },
       })
 
       const events = monitor.getEvents()
@@ -202,7 +202,7 @@ describe('RuntimeMonitoringLayer', () => {
       for (let i = 0; i < 501; i++) {
         monitor.recordEvent({
           type: 'analysis',
-          code: `code ${i}`
+          code: `code ${i}`,
         })
       }
 
@@ -216,20 +216,20 @@ describe('RuntimeMonitoringLayer', () => {
   describe('getMetrics', () => {
     it('should provide correct metrics', () => {
       monitor.startMonitoring()
-      
+
       // Record some violations and events
       monitor.recordViolation({
         type: 'timeout',
         message: 'Timeout',
-        severity: 'high'
+        severity: 'high',
       })
-      
+
       monitor.recordViolation({
         type: 'memory_limit',
         message: 'Memory limit',
-        severity: 'medium'
+        severity: 'medium',
       })
-      
+
       monitor.stopMonitoring()
 
       const metrics = monitor.getMetrics()
@@ -248,11 +248,11 @@ describe('RuntimeMonitoringLayer', () => {
       const newConfig = {
         maxExecutionTime: 2000,
         maxMemoryUsage: 2,
-        blockedAPIs: ['eval', 'Function']
+        blockedAPIs: ['eval', 'Function'],
       }
 
       monitor.updateConfig(newConfig)
-      
+
       // Test that new configuration is applied
       monitor.startMonitoring()
       expect(monitor.checkAPIAccess('eval')).toBe(false)
@@ -267,11 +267,11 @@ describe('RuntimeMonitoringLayer', () => {
       monitor.recordViolation({
         type: 'timeout',
         message: 'Test violation',
-        severity: 'high'
+        severity: 'high',
       })
       monitor.recordEvent({
         type: 'analysis',
-        code: 'test code'
+        code: 'test code',
       })
       monitor.stopMonitoring()
 
@@ -282,7 +282,7 @@ describe('RuntimeMonitoringLayer', () => {
 
       expect(monitor.getViolations()).toHaveLength(0)
       expect(monitor.getEvents()).toHaveLength(0)
-      
+
       const metrics = monitor.getMetrics()
       expect(metrics.totalViolations).toBe(0)
       expect(metrics.blockedExecutions).toBe(0)

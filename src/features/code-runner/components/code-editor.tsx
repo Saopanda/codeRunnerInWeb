@@ -1,19 +1,16 @@
 import { Editor } from '@monaco-editor/react'
 import type { editor } from 'monaco-editor'
-import { useCodeRunnerStore } from '../stores/code-runner-store'
 import { useTheme } from '@/context/theme-provider'
-
+import { useCodeRunnerStore } from '../stores/code-runner-store'
 
 export function CodeEditor() {
-  const { 
-    code, 
-    setCode, 
-    language
-  } = useCodeRunnerStore()
-  
+  const { code, setCode, language } = useCodeRunnerStore()
+
   const { resolvedTheme } = useTheme()
 
-  const handleEditorDidMount = (editorInstance: editor.IStandaloneCodeEditor) => {
+  const handleEditorDidMount = (
+    editorInstance: editor.IStandaloneCodeEditor
+  ) => {
     // 设置编辑器选项
     editorInstance.updateOptions({
       minimap: { enabled: false },
@@ -28,17 +25,17 @@ export function CodeEditor() {
       bracketPairColorization: { enabled: true },
       guides: {
         bracketPairs: true,
-        indentation: true
-      }
+        indentation: true,
+      },
     })
 
     // 监听窗口大小变化
     const handleResize = () => {
       editorInstance.layout()
     }
-    
+
     window.addEventListener('resize', handleResize)
-    
+
     // 清理函数
     return () => {
       window.removeEventListener('resize', handleResize)
@@ -51,16 +48,12 @@ export function CodeEditor() {
     }
   }
 
-
-
-
-
   return (
-    <div className="flex flex-col h-full">
+    <div className='flex h-full flex-col'>
       {/* 编辑器 */}
-      <div className="flex-1 relative">
+      <div className='relative flex-1' data-testid='code-editor-container'>
         <Editor
-          height="100%"
+          height='100%'
           language={language}
           value={code}
           onChange={handleCodeChange}
@@ -83,8 +76,8 @@ export function CodeEditor() {
               verticalHasArrows: false,
               horizontalHasArrows: false,
               verticalScrollbarSize: 12,
-              horizontalScrollbarSize: 12
-            }
+              horizontalScrollbarSize: 12,
+            },
           }}
         />
       </div>

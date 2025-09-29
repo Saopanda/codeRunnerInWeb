@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { performanceMonitor } from '../performance-monitor'
+import { phpSandboxManager } from '../php-sandbox'
 import { SimpleSandboxManager } from '../simple-sandbox'
 // import { useCodeRunnerStore } from '../../stores/code-runner-store'
 import { typescriptCompiler } from '../typescript-compiler'
-import { performanceMonitor } from '../performance-monitor'
-import { phpSandboxManager } from '../php-sandbox'
 
 // Mock dependencies
 vi.mock('../typescript-compiler')
@@ -15,13 +15,13 @@ const mockStore = {
   setExecutionState: vi.fn(),
   clearOutputs: vi.fn(),
   addOutput: vi.fn(),
-  setCompileState: vi.fn()
+  setCompileState: vi.fn(),
 }
 
 vi.mock('../../stores/code-runner-store', () => ({
   useCodeRunnerStore: {
-    getState: () => mockStore
-  }
+    getState: () => mockStore,
+  },
 }))
 
 describe('SimpleSandboxManager', () => {
@@ -55,31 +55,37 @@ describe('SimpleSandboxManager', () => {
         timeout: 5000,
         maxMemory: 50 * 1024 * 1024,
         allowedAPIs: [],
-        blockedAPIs: []
+        blockedAPIs: [],
       }
 
-      vi.mocked(performanceMonitor.startExecutionMonitoring).mockReturnValue(() => 100)
+      vi.mocked(performanceMonitor.startExecutionMonitoring).mockReturnValue(
+        () => 100
+      )
 
       await sandbox.executeCode(code, config, 'javascript')
 
-      expect(performanceMonitor.startExecutionMonitoring).toHaveBeenCalledWith(code, 'javascript')
+      expect(performanceMonitor.startExecutionMonitoring).toHaveBeenCalledWith(
+        code,
+        'javascript'
+      )
       expect(mockStore.setExecutionState).toHaveBeenCalledWith({
         isRunning: true,
         executionId: expect.any(String),
         startTime: expect.any(Number),
-        executionTime: null
+        executionTime: null,
       })
     })
   })
 
   describe('TypeScript execution', () => {
     it('should compile and execute TypeScript code', async () => {
-      const code = 'const message: string = "Hello TypeScript"; console.log(message);'
+      const code =
+        'const message: string = "Hello TypeScript"; console.log(message);'
       const config = {
         timeout: 5000,
         maxMemory: 50 * 1024 * 1024,
         allowedAPIs: [],
-        blockedAPIs: []
+        blockedAPIs: [],
       }
 
       vi.mocked(typescriptCompiler.compile).mockResolvedValue({
@@ -89,11 +95,16 @@ describe('SimpleSandboxManager', () => {
         warnings: [],
       })
 
-      vi.mocked(performanceMonitor.startExecutionMonitoring).mockReturnValue(() => 100)
+      vi.mocked(performanceMonitor.startExecutionMonitoring).mockReturnValue(
+        () => 100
+      )
 
       await sandbox.executeCode(code, config, 'typescript')
 
-      expect(typescriptCompiler.compile).toHaveBeenCalledWith(code, expect.any(Object))
+      expect(typescriptCompiler.compile).toHaveBeenCalledWith(
+        code,
+        expect.any(Object)
+      )
     })
   })
 
@@ -104,11 +115,13 @@ describe('SimpleSandboxManager', () => {
         timeout: 5000,
         maxMemory: 50 * 1024 * 1024,
         allowedAPIs: [],
-        blockedAPIs: []
+        blockedAPIs: [],
       }
 
       vi.mocked(phpSandboxManager.executeCode).mockResolvedValue(undefined)
-      vi.mocked(performanceMonitor.startExecutionMonitoring).mockReturnValue(() => 100)
+      vi.mocked(performanceMonitor.startExecutionMonitoring).mockReturnValue(
+        () => 100
+      )
 
       await sandbox.executeCode(code, config, 'php')
 
@@ -123,17 +136,21 @@ describe('SimpleSandboxManager', () => {
         timeout: 5000,
         maxMemory: 50 * 1024 * 1024,
         allowedAPIs: [],
-        blockedAPIs: []
+        blockedAPIs: [],
       }
 
-      vi.mocked(performanceMonitor.startExecutionMonitoring).mockReturnValue(() => 100)
+      vi.mocked(performanceMonitor.startExecutionMonitoring).mockReturnValue(
+        () => 100
+      )
 
       // Manually set executionId to simulate running execution
       sandbox['executionId'] = 'test-execution-id'
-      
+
       // Try to start execution (should fail)
-      await expect(sandbox.executeCode(code, config, 'javascript')).rejects.toThrow('已有代码正在执行中')
-      
+      await expect(
+        sandbox.executeCode(code, config, 'javascript')
+      ).rejects.toThrow('已有代码正在执行中')
+
       // Clean up
       sandbox['executionId'] = null
     })

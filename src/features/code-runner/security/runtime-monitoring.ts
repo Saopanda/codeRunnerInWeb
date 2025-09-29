@@ -1,4 +1,9 @@
-import type { RuntimeSecurityConfig, RuntimeViolation, SecurityEvent, SecurityMetrics } from './types'
+import type {
+  RuntimeSecurityConfig,
+  RuntimeViolation,
+  SecurityEvent,
+  SecurityMetrics,
+} from './types'
 
 /**
  * 运行时安全监控
@@ -19,18 +24,41 @@ export class RuntimeMonitoringLayer {
       maxMemoryUsage: 50, // 50MB
       maxStackDepth: 100,
       allowedAPIs: [
-        'console', 'Date', 'Math', 'JSON', 'Array', 'Object', 
-        'String', 'Number', 'Boolean', 'RegExp', 'Promise',
-        'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval'
+        'console',
+        'Date',
+        'Math',
+        'JSON',
+        'Array',
+        'Object',
+        'String',
+        'Number',
+        'Boolean',
+        'RegExp',
+        'Promise',
+        'setTimeout',
+        'clearTimeout',
+        'setInterval',
+        'clearInterval',
       ],
       blockedAPIs: [
-        'eval', 'Function', 'document', 'window', 'localStorage', 
-        'sessionStorage', 'XMLHttpRequest', 'fetch', 'require',
-        'process', 'global', 'Buffer', 'fs', 'path'
+        'eval',
+        'Function',
+        'document',
+        'window',
+        'localStorage',
+        'sessionStorage',
+        'XMLHttpRequest',
+        'fetch',
+        'require',
+        'process',
+        'global',
+        'Buffer',
+        'fs',
+        'path',
       ],
       enableResourceMonitoring: true,
       enableCodeAnalysis: true,
-      ...config
+      ...config,
     }
 
     this.metrics = {
@@ -40,7 +68,7 @@ export class RuntimeMonitoringLayer {
       averageAnalysisTime: 0,
       riskLevelDistribution: {},
       violationTypes: {},
-      lastUpdated: Date.now()
+      lastUpdated: Date.now(),
     }
   }
 
@@ -70,7 +98,7 @@ export class RuntimeMonitoringLayer {
     this.startStackMonitoring()
 
     this.recordEvent({
-      type: 'allow'
+      type: 'allow',
     })
   }
 
@@ -83,7 +111,7 @@ export class RuntimeMonitoringLayer {
     this.isMonitoring = false
 
     this.recordEvent({
-      type: 'allow'
+      type: 'allow',
     })
 
     this.updateMetrics()
@@ -101,7 +129,7 @@ export class RuntimeMonitoringLayer {
       type: 'blocked_api',
       message: `尝试访问被禁止的API: ${apiName}`,
       severity: 'high',
-      metadata: { apiName, context }
+      metadata: { apiName, context },
     })
 
     return false
@@ -122,7 +150,10 @@ export class RuntimeMonitoringLayer {
         type: 'memory_limit',
         message: `内存使用超出限制: ${(memoryIncrease / 1024 / 1024).toFixed(2)}MB`,
         severity: 'high',
-        metadata: { memoryUsage: memoryIncrease, limit: this.config.maxMemoryUsage }
+        metadata: {
+          memoryUsage: memoryIncrease,
+          limit: this.config.maxMemoryUsage,
+        },
       })
       return false
     }
@@ -134,7 +165,7 @@ export class RuntimeMonitoringLayer {
         type: 'stack_overflow',
         message: `调用栈深度超出限制: ${stackDepth}`,
         severity: 'critical',
-        metadata: { stackDepth, limit: this.config.maxStackDepth }
+        metadata: { stackDepth, limit: this.config.maxStackDepth },
       })
       return false
     }
@@ -148,7 +179,7 @@ export class RuntimeMonitoringLayer {
   recordViolation(violation: Omit<RuntimeViolation, 'timestamp'>): void {
     const fullViolation: RuntimeViolation = {
       ...violation,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     }
 
     this.violations.push(fullViolation)
@@ -160,7 +191,7 @@ export class RuntimeMonitoringLayer {
 
     this.recordEvent({
       type: 'violation',
-      violation: fullViolation
+      violation: fullViolation,
     })
 
     // 如果是严重违规，立即停止执行
@@ -176,7 +207,7 @@ export class RuntimeMonitoringLayer {
     const fullEvent: SecurityEvent = {
       ...event,
       id: `event-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     }
 
     this.events.push(fullEvent)
@@ -192,7 +223,8 @@ export class RuntimeMonitoringLayer {
    */
   private getCurrentMemoryUsage(): number {
     if ('memory' in performance) {
-      const memory = (performance as { memory: { usedJSHeapSize: number } }).memory
+      const memory = (performance as { memory: { usedJSHeapSize: number } })
+        .memory
       return memory.usedJSHeapSize
     }
     return 0
@@ -222,7 +254,7 @@ export class RuntimeMonitoringLayer {
         type: 'timeout',
         message: `执行超时: ${executionTime}ms`,
         severity: 'high',
-        metadata: { executionTime, limit: this.config.maxExecutionTime }
+        metadata: { executionTime, limit: this.config.maxExecutionTime },
       })
       this.stopExecution()
     }
@@ -261,7 +293,10 @@ export class RuntimeMonitoringLayer {
           type: 'stack_overflow',
           message: `调用栈深度超出限制: ${currentDepth}`,
           severity: 'critical',
-          metadata: { stackDepth: currentDepth, limit: this.config.maxStackDepth }
+          metadata: {
+            stackDepth: currentDepth,
+            limit: this.config.maxStackDepth,
+          },
         })
         this.stopExecution()
         return
@@ -281,7 +316,7 @@ export class RuntimeMonitoringLayer {
     this.metrics.blockedExecutions++
 
     this.recordEvent({
-      type: 'block'
+      type: 'block',
     })
 
     // 抛出安全异常
@@ -296,16 +331,22 @@ export class RuntimeMonitoringLayer {
     this.metrics.lastUpdated = Date.now()
 
     // 计算违规类型分布
-    this.metrics.violationTypes = this.violations.reduce((acc, violation) => {
-      acc[violation.type] = (acc[violation.type] || 0) + 1
-      return acc
-    }, {} as Record<string, number>)
+    this.metrics.violationTypes = this.violations.reduce(
+      (acc, violation) => {
+        acc[violation.type] = (acc[violation.type] || 0) + 1
+        return acc
+      },
+      {} as Record<string, number>
+    )
 
     // 计算严重程度分布
-    this.metrics.riskLevelDistribution = this.violations.reduce((acc, violation) => {
-      acc[violation.severity] = (acc[violation.severity] || 0) + 1
-      return acc
-    }, {} as Record<string, number>)
+    this.metrics.riskLevelDistribution = this.violations.reduce(
+      (acc, violation) => {
+        acc[violation.severity] = (acc[violation.severity] || 0) + 1
+        return acc
+      },
+      {} as Record<string, number>
+    )
   }
 
   /**
@@ -343,7 +384,7 @@ export class RuntimeMonitoringLayer {
       averageAnalysisTime: 0,
       riskLevelDistribution: {},
       violationTypes: {},
-      lastUpdated: Date.now()
+      lastUpdated: Date.now(),
     }
   }
 

@@ -127,7 +127,8 @@ describe('CodeAnalysisLayer', () => {
       expect(mediumRiskResult.riskLevel).toBe('medium')
 
       // High risk
-      const highRiskCode = 'document.getElementById("test"); window.location.href; document.body; window.location.reload(); fetch("http://example.com"); XMLHttpRequest()'
+      const highRiskCode =
+        'document.getElementById("test"); window.location.href; document.body; window.location.reload(); fetch("http://example.com"); XMLHttpRequest()'
       const highRiskResult = analyzer.analyze(highRiskCode)
       expect(highRiskResult.riskLevel).toBe('high')
 
@@ -198,7 +199,7 @@ describe('CodeAnalysisLayer', () => {
       const result = analyzer.analyze(complexCode)
 
       expect(result.safe).toBe(false)
-      const complexityIssue = result.issues.find(issue => 
+      const complexityIssue = result.issues.find((issue) =>
         issue.message.includes('嵌套深度')
       )
       expect(complexityIssue).toBeDefined()

@@ -1,4 +1,8 @@
-import { useCodeRunnerStore, type CodeOutput, type SandboxConfig } from '../stores/code-runner-store'
+import {
+  useCodeRunnerStore,
+  type CodeOutput,
+  type SandboxConfig,
+} from '../stores/code-runner-store'
 
 export class PHPSandboxManager {
   private executionId: string | null = null
@@ -19,7 +23,7 @@ export class PHPSandboxManager {
         this.addOutput({
           type: 'error',
           message: `PHP-WASM 加载失败: ${error instanceof Error ? error.message : '未知错误'}`,
-          source: 'error'
+          source: 'error',
         })
         throw error
       }
@@ -32,7 +36,7 @@ export class PHPSandboxManager {
       this.addOutput({
         type: 'warn',
         message: 'PHP 代码正在执行中，请等待完成后再试',
-        source: 'console'
+        source: 'system',
       })
       return
     }
@@ -44,7 +48,7 @@ export class PHPSandboxManager {
       this.stopExecution()
 
       // 等待一小段时间确保清理完成
-      await new Promise(resolve => setTimeout(resolve, 50))
+      await new Promise((resolve) => setTimeout(resolve, 50))
 
       // 确保 PhpWeb 类已加载
       await this.initialize()
@@ -58,7 +62,7 @@ export class PHPSandboxManager {
         isRunning: true,
         executionId: this.executionId,
         startTime: this.startTime,
-        executionTime: null
+        executionTime: null,
       })
 
       // 清空之前的输出
@@ -69,7 +73,7 @@ export class PHPSandboxManager {
         this.addOutput({
           type: 'error',
           message: 'PHP 代码执行超时',
-          source: 'timeout'
+          source: 'timeout',
         })
         this.stopExecution()
       }, config.timeout || 10000)
@@ -87,7 +91,7 @@ export class PHPSandboxManager {
         this.addOutput({
           type: 'info',
           message: '正在初始化 PHP 环境...',
-          source: 'console'
+          source: 'system',
         })
 
         this.currentPhpInstance = new this.PhpWebClass()
@@ -103,18 +107,22 @@ export class PHPSandboxManager {
             this.addOutput({
               type: 'info',
               message: 'PHP 环境初始化完成',
-              source: 'console'
+              source: 'system',
             })
             resolve()
           }
 
-          const errorHandler = (event: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+          const errorHandler = (event: { detail?: string }) => {
             window.clearTimeout(readyTimeout)
             reject(new Error(event.detail || 'PHP 初始化失败'))
           }
 
-          this.currentPhpInstance.addEventListener('ready', readyHandler, { once: true })
-          this.currentPhpInstance.addEventListener('error', errorHandler, { once: true })
+          this.currentPhpInstance.addEventListener('ready', readyHandler, {
+            once: true,
+          })
+          this.currentPhpInstance.addEventListener('error', errorHandler, {
+            once: true,
+          })
         })
       }
 
@@ -122,24 +130,24 @@ export class PHPSandboxManager {
       let phpOutput = ''
       let phpErrors = ''
 
-      const outputHandler = (event: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+      const outputHandler = (event: { detail?: string }) => {
         if (event.detail) {
           phpOutput += event.detail
           this.addOutput({
             type: 'log',
             message: event.detail,
-            source: 'console'
+            source: 'console',
           })
         }
       }
 
-      const errorHandler = (event: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+      const errorHandler = (event: { detail?: string }) => {
         if (event.detail) {
           phpErrors += event.detail
           this.addOutput({
             type: 'error',
             message: event.detail,
-            source: 'error'
+            source: 'error',
           })
         }
       }
@@ -152,38 +160,41 @@ export class PHPSandboxManager {
         this.addOutput({
           type: 'info',
           message: '正在执行 PHP 代码...',
-          source: 'console'
+          source: 'system',
         })
 
         // 执行PHP代码
         const returnCode = await this.currentPhpInstance.run(cleanCode)
 
         // 如果没有输出但执行成功，显示成功信息
-        if (phpOutput.trim() === '' && phpErrors.trim() === '' && returnCode === 0) {
+        if (
+          phpOutput.trim() === '' &&
+          phpErrors.trim() === '' &&
+          returnCode === 0
+        ) {
           this.addOutput({
             type: 'info',
             message: 'PHP 代码执行完成（无输出）',
-            source: 'console'
+            source: 'system',
           })
         } else if (returnCode === 0) {
           this.addOutput({
             type: 'info',
             message: 'PHP 代码执行完成',
-            source: 'console'
+            source: 'system',
           })
         } else {
           this.addOutput({
             type: 'error',
             message: `PHP 执行失败，返回码: ${returnCode}`,
-            source: 'error'
+            source: 'error',
           })
         }
-
       } catch (error) {
         this.addOutput({
           type: 'error',
           message: `PHP 执行错误: ${error instanceof Error ? error.message : '未知错误'}`,
-          source: 'error'
+          source: 'error',
         })
       } finally {
         // 清理事件监听器
@@ -192,16 +203,15 @@ export class PHPSandboxManager {
       }
 
       // 等待输出处理完成
-      await new Promise(resolve => setTimeout(resolve, 100))
+      await new Promise((resolve) => setTimeout(resolve, 100))
 
       // 只清理执行状态，不更新 store
       this.cleanupExecution()
-
     } catch (error) {
       this.addOutput({
         type: 'error',
         message: error instanceof Error ? error.message : 'PHP 执行错误',
-        source: 'error'
+        source: 'error',
       })
       this.cleanupExecution()
       throw error // 重新抛出错误让上层处理
@@ -221,7 +231,6 @@ export class PHPSandboxManager {
     this.executionId = null
     this.startTime = 0
   }
-
 
   private addOutput(output: Omit<CodeOutput, 'id' | 'timestamp'>) {
     const store = useCodeRunnerStore.getState()
@@ -248,14 +257,14 @@ export class PHPSandboxManager {
         isPaused: false,
         executionId: null,
         startTime: null,
-        timeoutId: null
+        timeoutId: null,
       })
 
       // 添加执行完成信息
       this.addOutput({
         type: 'info',
         message: `执行完成 (ID: ${currentExecutionId})`,
-        source: 'console'
+        source: 'system',
       })
     }
   }
@@ -284,7 +293,7 @@ export class PHPSandboxManager {
       isReady: this.PhpWebClass !== null,
       executionId: this.executionId,
       startTime: this.startTime,
-      hasInstance: this.currentPhpInstance !== null
+      hasInstance: this.currentPhpInstance !== null,
     }
   }
 
@@ -296,7 +305,7 @@ export class PHPSandboxManager {
     this.addOutput({
       type: 'info',
       message: '正在强制重置 PHP 环境...',
-      source: 'console'
+      source: 'system',
     })
 
     // 销毁当前实例
@@ -325,7 +334,7 @@ export class PHPSandboxManager {
     this.addOutput({
       type: 'info',
       message: 'PHP 环境重置完成',
-      source: 'console'
+      source: 'system',
     })
   }
 }

@@ -14,7 +14,7 @@ describe('CodeRunnerStore', () => {
         startTime: null,
         timeoutId: null,
         executionTime: null,
-        firstExecutionTime: null
+        firstExecutionTime: null,
       },
       outputs: [],
       config: {
@@ -28,7 +28,7 @@ describe('CodeRunnerStore', () => {
         compileErrors: [],
         compileWarnings: [],
         compileTime: null,
-        firstCompileTime: null
+        firstCompileTime: null,
       },
     })
   })
@@ -46,7 +46,7 @@ describe('CodeRunnerStore', () => {
         startTime: null,
         timeoutId: null,
         executionTime: null,
-        firstExecutionTime: null
+        firstExecutionTime: null,
       })
       expect(state.outputs).toEqual([])
       expect(state.config).toEqual({
@@ -60,7 +60,7 @@ describe('CodeRunnerStore', () => {
         compileErrors: [],
         compileWarnings: [],
         compileTime: null,
-        firstCompileTime: null
+        firstCompileTime: null,
       })
     })
   })
@@ -68,9 +68,9 @@ describe('CodeRunnerStore', () => {
   describe('setCode', () => {
     it('should update code', () => {
       const newCode = 'console.log("Hello World");'
-      
+
       useCodeRunnerStore.getState().setCode(newCode)
-      
+
       expect(useCodeRunnerStore.getState().code).toBe(newCode)
     })
   })
@@ -78,13 +78,13 @@ describe('CodeRunnerStore', () => {
   describe('setLanguage', () => {
     it('should update language to typescript', () => {
       useCodeRunnerStore.getState().setLanguage('typescript')
-      
+
       expect(useCodeRunnerStore.getState().language).toBe('typescript')
     })
 
     it('should update language to javascript', () => {
       useCodeRunnerStore.getState().setLanguage('javascript')
-      
+
       expect(useCodeRunnerStore.getState().language).toBe('javascript')
     })
   })
@@ -98,9 +98,9 @@ describe('CodeRunnerStore', () => {
         source: 'console' as const,
         timestamp: Date.now(),
       }
-      
+
       useCodeRunnerStore.getState().addOutput(output)
-      
+
       const outputs = useCodeRunnerStore.getState().outputs
       expect(outputs).toHaveLength(1)
       expect(outputs[0].id).toBeDefined()
@@ -114,9 +114,9 @@ describe('CodeRunnerStore', () => {
         message: 'Test message',
         source: 'console' as const,
       }
-      
+
       useCodeRunnerStore.getState().addOutput(output)
-      
+
       const outputs = useCodeRunnerStore.getState().outputs
       expect(outputs).toHaveLength(1)
       expect(outputs[0].id).toBeDefined()
@@ -132,10 +132,10 @@ describe('CodeRunnerStore', () => {
         message: 'Message 1',
         source: 'console',
       })
-      
+
       // Clear outputs
       useCodeRunnerStore.getState().clearOutputs()
-      
+
       expect(useCodeRunnerStore.getState().outputs).toEqual([])
     })
   })
@@ -147,9 +147,9 @@ describe('CodeRunnerStore', () => {
         compileErrors: ['Error 1'],
         compileWarnings: ['Warning 1'],
       }
-      
+
       useCodeRunnerStore.getState().setCompileState(newState)
-      
+
       const compileState = useCodeRunnerStore.getState().compileState
       expect(compileState.isCompiling).toBe(true)
       expect(compileState.compileErrors).toEqual(['Error 1'])

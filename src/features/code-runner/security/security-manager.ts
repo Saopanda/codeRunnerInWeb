@@ -1,11 +1,11 @@
 import { CodeAnalysisLayer } from './code-analysis'
 import { RuntimeMonitoringLayer } from './runtime-monitoring'
-import type { 
-  SecurityAnalysisResult, 
-  RuntimeSecurityConfig, 
+import type {
+  SecurityAnalysisResult,
+  RuntimeSecurityConfig,
   SecurityEvent,
   SecurityMetrics,
-  RuntimeViolation
+  RuntimeViolation,
 } from './types'
 
 /**
@@ -47,7 +47,7 @@ export class SecurityManager {
         issues: [],
         riskLevel: 'low',
         confidence: 1.0,
-        analysisTime: 0
+        analysisTime: 0,
       }
     }
 
@@ -132,14 +132,18 @@ export class SecurityManager {
   } {
     const metrics = this.getSecurityMetrics()
     const violations = this.getViolations()
-    
+
     let riskLevel: 'low' | 'medium' | 'high' | 'critical' = 'low'
-    
+
     if (violations.length > 0) {
-      const criticalCount = violations.filter(v => v.severity === 'critical').length
-      const highCount = violations.filter(v => v.severity === 'high').length
-      const mediumCount = violations.filter(v => v.severity === 'medium').length
-      
+      const criticalCount = violations.filter(
+        (v) => v.severity === 'critical'
+      ).length
+      const highCount = violations.filter((v) => v.severity === 'high').length
+      const mediumCount = violations.filter(
+        (v) => v.severity === 'medium'
+      ).length
+
       if (criticalCount > 0) riskLevel = 'critical'
       else if (highCount > 2) riskLevel = 'high'
       else if (highCount > 0 || mediumCount > 3) riskLevel = 'medium'
@@ -150,7 +154,7 @@ export class SecurityManager {
       totalViolations: metrics.totalViolations,
       blockedExecutions: metrics.blockedExecutions,
       lastViolation: violations[violations.length - 1],
-      riskLevel
+      riskLevel,
     }
   }
 
@@ -170,7 +174,7 @@ export class SecurityManager {
     // 根据分析结果分类问题
     for (const issue of analysis.issues) {
       const message = `第${issue.line}行: ${issue.message}`
-      
+
       if (issue.severity === 'critical' || issue.severity === 'high') {
         errors.push(message)
       } else {
@@ -180,8 +184,10 @@ export class SecurityManager {
 
     // 根据风险等级决定是否允许执行
     let isSafe = true
-    if (analysis.riskLevel === 'critical' || 
-        (analysis.riskLevel === 'high' && errors.length > 2)) {
+    if (
+      analysis.riskLevel === 'critical' ||
+      (analysis.riskLevel === 'high' && errors.length > 2)
+    ) {
       isSafe = false
     }
 
@@ -189,7 +195,7 @@ export class SecurityManager {
       isSafe,
       analysis,
       warnings,
-      errors
+      errors,
     }
   }
 
@@ -208,7 +214,7 @@ export class SecurityManager {
       summary: this.getSecuritySummary(),
       metrics: this.getSecurityMetrics(),
       violations: this.getViolations(),
-      events: this.getSecurityEvents()
+      events: this.getSecurityEvents(),
     }
   }
 }

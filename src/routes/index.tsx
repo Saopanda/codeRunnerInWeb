@@ -4,4 +4,3 @@ import { CodeRunner } from '@/features/code-runner'
 export const Route = createFileRoute('/')({
   component: CodeRunner,
 })
-
