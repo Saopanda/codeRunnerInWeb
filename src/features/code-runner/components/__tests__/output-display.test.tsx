@@ -11,7 +11,24 @@ const mockStore = {
   searchTerm: '',
   selectedOutputs: [] as string[],
   toggleOutputSelection: vi.fn(),
-  clearSelection: vi.fn()
+  clearSelection: vi.fn(),
+  executionState: {
+    isRunning: false,
+    isPaused: false,
+    executionId: null,
+    startTime: null,
+    timeoutId: null,
+    executionTime: null,
+    firstExecutionTime: null
+  },
+  compileState: {
+    isCompiling: false,
+    compileErrors: [],
+    compileWarnings: [],
+    compileTime: null,
+    firstCompileTime: null
+  },
+  language: 'javascript' as const
 }
 
 vi.mock('../../stores/code-runner-store', () => ({
@@ -31,7 +48,7 @@ describe('OutputDisplay', () => {
     it('should render with empty outputs', () => {
       render(<OutputDisplay />)
       
-      expect(screen.getByText('等待执行...')).toBeInTheDocument()
+      expect(screen.getByText('等待执行代码...')).toBeInTheDocument()
     })
 
     it('should render with outputs', () => {
@@ -235,7 +252,7 @@ describe('OutputDisplay', () => {
     it('should have proper structure', () => {
       render(<OutputDisplay />)
       
-      expect(screen.getByText('等待执行...')).toBeInTheDocument()
+      expect(screen.getByText('等待执行代码...')).toBeInTheDocument()
     })
   })
 })

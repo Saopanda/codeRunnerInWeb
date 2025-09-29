@@ -32,12 +32,16 @@ const mockStore = {
     isPaused: false,
     executionId: null,
     startTime: null,
-    timeoutId: null
+    timeoutId: null,
+    executionTime: null,
+    firstExecutionTime: null
   },
   compileState: {
     isCompiling: false,
     compileErrors: [],
-    compileWarnings: []
+    compileWarnings: [],
+    compileTime: null,
+    firstCompileTime: null
   },
   config: {
     timeout: 10000,
@@ -45,11 +49,14 @@ const mockStore = {
     allowedAPIs: [],
     blockedAPIs: [],
     language: 'python' as const
-  }
+  },
+  getState: vi.fn(() => mockStore)
 }
 
 vi.mock('../../stores/code-runner-store', () => ({
-  useCodeRunnerStore: () => mockStore
+  useCodeRunnerStore: Object.assign(() => mockStore, {
+    getState: () => mockStore
+  })
 }))
 
 // Mock simpleSandboxManager

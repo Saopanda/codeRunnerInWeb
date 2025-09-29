@@ -40,7 +40,7 @@ vi.mock('../../security/security-manager', () => ({
 
 // Mock Monaco Editor
 vi.mock('@monaco-editor/react', () => ({
-  default: ({ onChange, onMount, value }: { onChange?: (value: string) => void; onMount?: (editor: unknown) => void; value: string }) => {
+  Editor: ({ onChange, onMount, value }: { onChange?: (value: string) => void; onMount?: (editor: unknown) => void; value: string }) => {
     const handleChange = (e: { target: { value: string } }) => {
       if (onChange) {
         onChange(e.target.value)

@@ -130,4 +130,4 @@ try {
 } catch (error) {
   console.error("捕获到错误:", error.message);
 }`
-}
+};

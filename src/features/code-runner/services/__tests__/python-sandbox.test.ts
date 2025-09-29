@@ -16,6 +16,24 @@ vi.mock('pyodide', () => ({
   loadPyodide: vi.fn(() => Promise.resolve(mockPyodide))
 }))
 
+// Mock Pyodide loader functions
+vi.mock('../pyodide-loader', () => ({
+  checkPyodideResources: vi.fn(() => Promise.resolve(true)),
+  preloadPyodideResources: vi.fn(() => Promise.resolve()),
+  getPyodideConfig: vi.fn(() => ({
+    indexURL: '/pyodide/',
+    fullStdLib: false,
+    packages: ['numpy', 'pandas', 'matplotlib']
+  }))
+}))
+
+// Mock Worker
+global.Worker = vi.fn(() => ({
+  onmessage: null,
+  postMessage: vi.fn(),
+  terminate: vi.fn()
+})) as any
+
 // Mock useCodeRunnerStore
 const mockStore = {
   setExecutionState: vi.fn(),
@@ -72,7 +90,8 @@ describe('PythonSandboxManager', () => {
 
     it('应该处理初始化错误', async () => {
       const error = new Error('初始化失败')
-      vi.mocked(require('pyodide').loadPyodide).mockRejectedValueOnce(error)
+      const { loadPyodide } = await import('pyodide')
+      vi.mocked(loadPyodide).mockRejectedValueOnce(error)
       
       await expect(pythonSandbox.initialize()).rejects.toThrow('初始化失败')
       

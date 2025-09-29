@@ -24,6 +24,7 @@ describe('Pyodide Loader', () => {
       expect(config).toEqual({
         indexURL: '/pyodide/',
         fullStdLib: false,
+        packageBaseUrl: 'https://cdn.jsdelivr.net/pyodide/v0.28.2/full/',
         packages: ['numpy', 'pandas', 'matplotlib']
       })
     })

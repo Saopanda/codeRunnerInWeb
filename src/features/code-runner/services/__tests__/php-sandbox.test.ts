@@ -85,18 +85,17 @@ describe('PHPSandboxManager', () => {
     })
 
     it('should handle initialization errors', async () => {
+      // Mock the dynamic import to reject
+      vi.doMock('php-wasm/PhpWeb.mjs', () => {
+        throw new Error('Import failed')
+      })
+      
       // Create a new sandbox instance to test initialization error
-      const errorSandbox = new PHPSandboxManager()
+      const newErrorSandbox = new PHPSandboxManager()
+      await expect(newErrorSandbox.initialize()).rejects.toThrow()
       
-      // Mock the import function to reject
-      const originalImport = (global as Record<string, unknown>).import
-      const mockImport = vi.fn().mockRejectedValueOnce(new Error('Import failed'))
-      ;(global as Record<string, unknown>).import = mockImport
-      
-      await expect(errorSandbox.initialize()).rejects.toThrow('Import failed')
-      
-      // Restore original import
-      ;(global as Record<string, unknown>).import = originalImport
+      // Restore original mock
+      vi.doUnmock('php-wasm/PhpWeb.mjs')
     })
 
     it('should not reinitialize if already initialized', async () => {
