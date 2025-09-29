@@ -112,8 +112,7 @@ export class PHPSandboxManager {
             resolve()
           }
 
-          const errorHandler = (event: any) => {
-            // eslint-disable-line @typescript-eslint/no-explicit-any
+          const errorHandler = (event: { detail?: string }) => {
             window.clearTimeout(readyTimeout)
             reject(new Error(event.detail || 'PHP 初始化失败'))
           }
@@ -131,8 +130,7 @@ export class PHPSandboxManager {
       let phpOutput = ''
       let phpErrors = ''
 
-      const outputHandler = (event: any) => {
-        // eslint-disable-line @typescript-eslint/no-explicit-any
+      const outputHandler = (event: { detail?: string }) => {
         if (event.detail) {
           phpOutput += event.detail
           this.addOutput({
@@ -143,8 +141,7 @@ export class PHPSandboxManager {
         }
       }
 
-      const errorHandler = (event: any) => {
-        // eslint-disable-line @typescript-eslint/no-explicit-any
+      const errorHandler = (event: { detail?: string }) => {
         if (event.detail) {
           phpErrors += event.detail
           this.addOutput({

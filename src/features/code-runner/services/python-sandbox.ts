@@ -309,8 +309,7 @@ export class PythonSandboxManager {
 
   // Worker 模式下不再使用
 
-  private formatPythonOutput(value: any): string {
-    // eslint-disable-line @typescript-eslint/no-explicit-any
+  private formatPythonOutput(value: unknown): string {
     try {
       if (value === null) return 'None'
       if (value === undefined) return 'undefined'
@@ -395,8 +394,7 @@ export class PythonSandboxManager {
     return inSingleQuote || inDoubleQuote || inTripleQuote
   }
 
-  private formatPythonError(error: any): string {
-    // eslint-disable-line @typescript-eslint/no-explicit-any
+  private formatPythonError(error: unknown): string {
     if (error instanceof Error) {
       // 尝试解析Python错误信息
       const message = error.message
