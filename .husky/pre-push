@@ -1,0 +1,26 @@
+# 获取当前分支名
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+
+echo "🔍 Running pre-push checks on branch: $current_branch"
+
+# 只在 cursor 分支上运行检查
+if [ "$current_branch" != "cursor" ]; then
+    echo "ℹ️  Skipping pre-push checks (not on cursor branch)"
+    exit 0
+fi
+
+echo "🚀 Running comprehensive checks on cursor branch..."
+
+# 运行 ESLint 检查
+echo "📋 Running ESLint..."
+pnpm lint
+
+# 运行格式化检查
+echo "🎨 Checking code formatting..."
+pnpm format:check
+
+# 运行测试
+echo "🧪 Running tests..."
+pnpm test
+
+echo "✅ All pre-push checks passed on cursor branch!"
