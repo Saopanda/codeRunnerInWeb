@@ -1,6 +1,10 @@
 import { render, screen } from '@testing-library/react'
 import { userEvent } from '@testing-library/user-event'
 import { describe, it, expect, vi } from 'vitest'
+import {
+  createStableTimestamp,
+  timePatterns,
+} from '../../../../test/ci-helpers'
 import { createWrapper } from '../../../../test/simple-setup'
 import type { CodeOutput } from '../../stores/code-runner-store'
 import { EnhancedOutputLine } from '../enhanced-output-line'
@@ -9,7 +13,7 @@ const createMockOutput = (overrides: Partial<CodeOutput> = {}): CodeOutput => ({
   id: '1',
   type: 'log',
   message: 'Test message',
-  timestamp: 1640995200000, // 2022-01-01 00:00:00
+  timestamp: createStableTimestamp(), // 使用稳定的时间戳
   source: 'console',
   ...overrides,
 })
@@ -20,7 +24,7 @@ describe('EnhancedOutputLine', () => {
     render(<EnhancedOutputLine output={output} />, { wrapper: createWrapper() })
 
     expect(screen.getByText('Test message')).toBeInTheDocument()
-    expect(screen.getByText('08:00:00')).toBeInTheDocument()
+    expect(screen.getByText(timePatterns.timeAny)).toBeInTheDocument()
     expect(screen.getByText('[console]')).toBeInTheDocument()
   })
 

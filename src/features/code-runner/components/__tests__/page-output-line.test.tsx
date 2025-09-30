@@ -1,5 +1,9 @@
 import { render, screen } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
+import {
+  createStableTimestamp,
+  timePatterns,
+} from '../../../../test/ci-helpers'
 import { createWrapper } from '../../../../test/simple-setup'
 import type { CodeOutput } from '../../stores/code-runner-store'
 import { PageOutputLine } from '../page-output-line'
@@ -8,7 +12,7 @@ const createMockOutput = (overrides: Partial<CodeOutput> = {}): CodeOutput => ({
   id: '1',
   type: 'log',
   message: 'Test message',
-  timestamp: 1640995200000, // 2022-01-01 00:00:00
+  timestamp: createStableTimestamp(), // 使用稳定的时间戳
   source: 'console',
   ...overrides,
 })
@@ -19,7 +23,8 @@ describe('PageOutputLine', () => {
     render(<PageOutputLine output={output} />, { wrapper: createWrapper() })
 
     expect(screen.getByText('Test message')).toBeInTheDocument()
-    expect(screen.getByText('08:00:00')).toBeInTheDocument()
+    // 使用更灵活的时间格式匹配，适配不同时区
+    expect(screen.getByText(timePatterns.timeAny)).toBeInTheDocument()
   })
 
   it('renders error output with message', () => {
@@ -59,17 +64,18 @@ describe('PageOutputLine', () => {
     })
 
     expect(screen.getByText('Test message')).toBeInTheDocument()
-    expect(screen.queryByText('08:00:00')).not.toBeInTheDocument()
+    // 验证没有时间戳格式的文本
+    expect(screen.queryByText(timePatterns.timeAny)).not.toBeInTheDocument()
   })
 
   it('formats timestamp correctly', () => {
     const output = createMockOutput({
-      timestamp: new Date('2023-05-15T14:30:45').getTime(),
+      timestamp: createStableTimestamp('2023-05-15T14:30:45.000Z'),
     })
     render(<PageOutputLine output={output} />, { wrapper: createWrapper() })
 
-    // 时间戳应该显示为本地时间格式
-    expect(screen.getByText(/\d{2}:\d{2}:\d{2}/)).toBeInTheDocument()
+    // 时间戳应该显示为时间格式，使用CI友好的正则表达式匹配
+    expect(screen.getByText(timePatterns.timeAny)).toBeInTheDocument()
   })
 
   it('handles HTML content safely', () => {
