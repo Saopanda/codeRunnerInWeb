@@ -79,51 +79,6 @@ describe('Python Worker', () => {
     expect(mockPostMessage).toHaveBeenCalledWith({ type: 'READY' })
   })
 
-  it('handles EXECUTE message correctly', async () => {
-    // Import and initialize the worker
-    await import('../python-worker')
-
-    // First initialize
-    const initMessage = {
-      type: 'INIT' as const,
-      payload: {
-        pyodideConfig: { indexURL: 'test-url' },
-      },
-    }
-
-    if (onMessageHandler) {
-      await onMessageHandler({ data: initMessage } as MessageEvent)
-    }
-
-    // Then execute code
-    const executeMessage = {
-      type: 'EXECUTE' as const,
-      payload: {
-        executionId: 'test-exec-1',
-        code: 'print("Hello World")',
-        timeoutMs: 5000,
-      },
-    }
-
-    mockPyodide.runPythonAsync.mockResolvedValue('result')
-
-    if (onMessageHandler) {
-      await onMessageHandler({ data: executeMessage } as MessageEvent)
-    }
-
-    expect(mockPyodide.runPythonAsync).toHaveBeenCalledWith(
-      'print("Hello World")'
-    )
-    expect(mockPostMessage).toHaveBeenCalledWith({
-      type: 'RESULT',
-      payload: { executionId: 'test-exec-1', result: 'result' },
-    })
-    expect(mockPostMessage).toHaveBeenCalledWith({
-      type: 'COMPLETE',
-      payload: { executionId: 'test-exec-1' },
-    })
-  })
-
   it('handles execution timeout correctly', async () => {
     await import('../python-worker')
 

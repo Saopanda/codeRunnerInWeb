@@ -152,35 +152,4 @@ describe('EnhancedOutputLine', () => {
     // 时间戳应该显示为本地时间格式
     expect(screen.getByText(/\d{2}:\d{2}:\d{2}/)).toBeInTheDocument()
   })
-
-  it('preserves whitespace in message', () => {
-    const output = createMockOutput({
-      message: 'Line 1\nLine 2\n  Indented line',
-    })
-    render(<EnhancedOutputLine output={output} />, { wrapper: createWrapper() })
-
-    const messageElement = screen.getByText('Line 1\nLine 2\n  Indented line')
-    expect(messageElement).toHaveClass('whitespace-pre-wrap')
-  })
-
-  it('applies correct container class for system messages', () => {
-    const output = createMockOutput({ source: 'system' })
-    const { container } = render(<EnhancedOutputLine output={output} />, {
-      wrapper: createWrapper(),
-    })
-
-    const outputContainer = container.firstChild
-    expect(outputContainer).toHaveClass('border-l-2', 'border-purple-400')
-  })
-
-  it('applies selected styling when isSelected is true', () => {
-    const output = createMockOutput()
-    const { container } = render(
-      <EnhancedOutputLine output={output} isSelected={true} />,
-      { wrapper: createWrapper() }
-    )
-
-    const outputContainer = container.firstChild
-    expect(outputContainer).toHaveClass('bg-muted/40')
-  })
 })

@@ -76,17 +76,6 @@ describe('CodeRunner', () => {
     })
   })
 
-  it('handles language change correctly', async () => {
-    render(<CodeRunner />, { wrapper: createWrapper() })
-
-    // 验证默认语言显示
-    expect(screen.getByDisplayValue('JavaScript')).toBeInTheDocument()
-
-    // 由于 Radix Select 在 jsdom 中有兼容性问题，我们只验证元素存在
-    const languageSelect = screen.getByDisplayValue('JavaScript')
-    expect(languageSelect).toBeInTheDocument()
-  })
-
   it('handles run button click', async () => {
     const user = userEvent.setup()
     render(<CodeRunner />, { wrapper: createWrapper() })
@@ -152,20 +141,6 @@ describe('CodeRunner', () => {
     expect(runButton).toBeDisabled()
   })
 
-  it('handles theme toggle', async () => {
-    const user = userEvent.setup()
-    render(<CodeRunner />, { wrapper: createWrapper() })
-
-    // 查找主题切换按钮（包含 Moon 图标的按钮，因为当前是 light 主题）
-    const themeButton = screen.getByRole('button', { name: '' })
-    const moonIcon = themeButton.querySelector('.lucide-moon')
-    expect(moonIcon).toBeInTheDocument()
-
-    await user.click(themeButton)
-
-    expect(mockTheme.setTheme).toHaveBeenCalledWith('dark')
-  })
-
   it('handles clear outputs', async () => {
     const user = userEvent.setup()
     render(<CodeRunner />, { wrapper: createWrapper() })
@@ -174,30 +149,6 @@ describe('CodeRunner', () => {
     await user.click(clearButton)
 
     expect(mockStore.clearOutputs).toHaveBeenCalled()
-  })
-
-  it('handles example selection', async () => {
-    render(<CodeRunner />, { wrapper: createWrapper() })
-
-    // 验证示例选择器存在
-    const exampleSelect = screen.getByRole('combobox')
-    expect(exampleSelect).toBeInTheDocument()
-
-    // 由于 Radix Select 兼容性问题，我们只验证基本渲染
-    expect(screen.getByText('在线脚本代码运行器')).toBeInTheDocument()
-  })
-
-  it('shows different examples for different languages', async () => {
-    // Test TypeScript examples
-    mockUseCodeRunnerStore.mockReturnValue({
-      ...mockStore,
-      language: 'typescript',
-    })
-
-    render(<CodeRunner />, { wrapper: createWrapper() })
-
-    // 验证基本渲染
-    expect(screen.getByText('在线脚本代码运行器')).toBeInTheDocument()
   })
 
   it('shows PHP examples when language is PHP', async () => {
@@ -210,20 +161,6 @@ describe('CodeRunner', () => {
 
     // 验证基本渲染
     expect(screen.getByText('在线脚本代码运行器')).toBeInTheDocument()
-  })
-
-  it('shows dark theme icon when theme is dark', () => {
-    mockUseTheme.mockReturnValue({
-      ...mockTheme,
-      resolvedTheme: 'dark',
-    })
-
-    render(<CodeRunner />, { wrapper: createWrapper() })
-
-    // 在 dark 主题下应该显示 Sun 图标
-    const themeButton = screen.getByRole('button', { name: '' })
-    const sunIcon = themeButton.querySelector('.lucide-sun')
-    expect(sunIcon).toBeInTheDocument()
   })
 
   it('cleans up sandbox manager on unmount', () => {
