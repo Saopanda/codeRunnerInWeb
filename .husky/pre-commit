@@ -1,0 +1,9 @@
+echo "🔍 Running pre-commit checks..."
+
+# 运行 staged 文件的修复
+echo "📝 Fixing staged files..."
+pnpm run fix:staged
+
+# 运行 TypeScript 编译检查
+echo "🔧 Running TypeScript compilation check..."
+pnpm tsc -b

@@ -1,0 +1,32 @@
+{
+  "eslintAutoFix": {
+    "description": "ESLint 自动修复程序配置",
+    "defaultTargets": [
+      "src/**/*.{js,jsx,ts,tsx}",
+      "scripts/**/*.{js,ts}",
+      "*.{js,ts}"
+    ],
+    "excludePatterns": [
+      "node_modules/**",
+      "dist/**",
+      "build/**",
+      ".git/**",
+      "coverage/**",
+      "*.min.js"
+    ],
+    "autoFixRules": {
+      "enabled": true,
+      "description": "启用自动修复功能的 ESLint 规则"
+    },
+    "prettierIntegration": {
+      "enabled": true,
+      "runAfterEslint": true,
+      "description": "在 ESLint 修复后运行 Prettier"
+    },
+    "reportOptions": {
+      "showStats": true,
+      "showFiles": false,
+      "verboseOutput": false
+    }
+  }
+}

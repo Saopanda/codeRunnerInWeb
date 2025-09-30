@@ -79,6 +79,8 @@ describe('PageOutputLine', () => {
     render(<PageOutputLine output={output} />, { wrapper: createWrapper() })
 
     // 脚本标签应该被过滤掉，只显示安全内容
-    expect(screen.getByText(/<script>alert\("xss"\)<\/script>Safe content/)).toBeInTheDocument()
+    expect(
+      screen.getByText(/<script>alert\("xss"\)<\/script>Safe content/)
+    ).toBeInTheDocument()
   })
 })
